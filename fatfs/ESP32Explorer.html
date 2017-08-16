@@ -5,7 +5,10 @@
 <title>ESP32 Explorer</title>
 <script src="jquery/jquery-3.2.1.min.js"></script>
 <link rel="stylesheet" href="jqueryui/jquery-ui.min.css">
+<link rel="stylesheet" href="jstree/themes/default/style.min.css" />
 <script src="jqueryui/jquery-ui.min.js"></script>
+<script src="jstree/jstree.min.js"></script>
+<script src="jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
 <script src="ESP32Explorer.js"></script>
 <style>
 .flexHoriz {
@@ -88,6 +91,15 @@
 					<div>
 						<span>Time:</span> <span id="timeSystemGeneralTab"></span>
 					</div>
+					<div>
+						<span>ESP IDF Version:</span> <span id="espVersionSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Cores:</span> <span id="coresSystemGeneralTab"></span>
+					</div>
+					<div>
+						<span>Revision:</span> <span id="revisionSystemGeneralTab"></span>
+					</div>
 				</div>
 				<div id="systemFreeRTOSTab">
 					<div>
@@ -96,8 +108,7 @@
 				</div>
 				<div id="systemPartitionTab">
 					<h3>Partitions:</h3>
-					<table id="partitionTable" border="1" cellspacing="0"
-						cellpadding="4">
+					<table id="partitionTable" border="1" cellspacing="0" cellpadding="4">
 						<thead>
 							<tr>
 								<th>Type</th>
@@ -115,38 +126,31 @@
 						<legend>Logging</legend>
 						<label for="systemLoggingNone">None</label>
 						<!--  -->
-						<input type="radio" name="systemLogging" id="systemLoggingNone"
-							data-logLevel="0">
+						<input type="radio" name="systemLogging" id="systemLoggingNone" data-logLevel="0">
 						<!--  -->
 						<label for="systemLoggingError">Error</label>
 						<!-- -->
-						<input type="radio" name="systemLogging" id="systemLoggingError"
-							data-logLevel="1">
+						<input type="radio" name="systemLogging" id="systemLoggingError" data-logLevel="1">
 						<!--  -->
 						<label for="systemLoggingWarn">Warn</label>
 						<!-- -->
-						<input type="radio" name="systemLogging" id="systemLoggingWarn"
-							data-logLevel="2">
+						<input type="radio" name="systemLogging" id="systemLoggingWarn" data-logLevel="2">
 						<!--  -->
 						<label for="systemLoggingInfo">Info</label>
 						<!-- -->
-						<input type="radio" name="systemLogging" id="systemLoggingInfo"
-							data-logLevel="3">
+						<input type="radio" name="systemLogging" id="systemLoggingInfo" data-logLevel="3">
 						<!--  -->
 						<label for="systemLoggingDebug">Debug</label>
 						<!-- -->
-						<input type="radio" name="systemLogging" id="systemLoggingDebug"
-							data-logLevel="4">
+						<input type="radio" name="systemLogging" id="systemLoggingDebug" data-logLevel="4">
 						<!--  -->
 						<label for="systemLoggingVerbose">Verbose</label>
 						<!-- -->
-						<input type="radio" name="systemLogging" id="systemLoggingVerbose"
-							data-logLevel="5">
+						<input type="radio" name="systemLogging" id="systemLoggingVerbose" data-logLevel="5">
 					</fieldset>
 				</div>
 				<div id="systemJSONTab" class="flexHoriz">
-					<textarea id="systemJsonText"
-						style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+					<textarea id="systemJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
 				</div>
 			</div>
 
@@ -215,8 +219,7 @@
 				</div>
 				<div id="wifiTabsJSONTab">
 					<div class="flexHoriz">
-						<textarea id="wifiJsonText"
-							style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						<textarea id="wifiJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
 					</div>
 				</div>
 			</div>
@@ -244,8 +247,7 @@
 				<div id="gpioTabsJSONTab">
 					<div>
 						<div class="flexHoriz">
-							<textarea id="gpioJsonText"
-								style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+							<textarea id="gpioJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
 						</div>
 					</div>
 				</div>
@@ -258,8 +260,7 @@
 		<!-- ------ -->
 		<div id="i2sTab">
 			<div class="flexHoriz">
-				<textarea id="i2sJsonText"
-					style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+				<textarea id="i2sJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
 			</div>
 			<div>
 				<button id="i2sRefreshButton">Refresh</button>
@@ -271,8 +272,11 @@
 		<!-- ------------- -->
 		<div id="fileSystemTab">
 			<div class="ui-widget">
-				<span>Root Path:</span>
-				<input id="rootPathText" type="text">
+				<span>Root Path:</span> <input id="rootPathText" type="text" value="/spiflash/dir1">
+				<div id="fileTree" style="width: 500px; height: 500px; border: 1px solid; margin-top: 8px;"></div>
+				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/upload">
+					<input type="file" name="myfile"> <input type="submit" name="submit" value="Upload Now">
+				</form>
 			</div>
 			<div style="margin-top: 8px;">
 				<button id="fileSystemRefreshButton">Refresh</button>
@@ -313,6 +317,10 @@
 			<!-- -->
 			<input type="radio" name="radioIO" id="outputGpioDialog">
 		</fieldset>
+	</div>
+
+	<div id="fileNameDialog">
+		<span>Filename:</span> <input type="text" id="fileNameText">
 	</div>
 </body>
 </html>

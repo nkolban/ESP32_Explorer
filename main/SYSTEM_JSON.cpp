@@ -9,7 +9,22 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
-
+/*
+ * {
+ *    model:      <number>
+ *    cores:      <number>
+ *    revision:   <number>
+ *    hasEmbeddedFlash: <boolean>
+ *    hasWifi:    <boolean>
+ *    hasBLE:     <boolean>
+ *    hasBT:      <boolean>
+ *    espVersion: <string>
+ *    freeHeap:   <number>
+ *    time:       <number>
+ *    taskCount:  <number>
+ *    partitions: []
+ * }
+ */
 static JsonObject fromPartition(esp_partition_t *pPartition) {
 	JsonObject obj = JSON::createObject();
 	obj.setInt("type",    pPartition->type);
@@ -24,6 +39,16 @@ static JsonObject fromPartition(esp_partition_t *pPartition) {
 
 JsonObject SYSTEM_JSON() {
 	JsonObject obj = JSON::createObject();
+	esp_chip_info_t chipInfo;
+	esp_chip_info(&chipInfo);
+	obj.setInt("model", chipInfo.model);
+	obj.setInt("cores", chipInfo.cores);
+	obj.setInt("revision", chipInfo.revision);
+	obj.setBoolean("hasEmbeddedFlash", chipInfo.features & CHIP_FEATURE_EMB_FLASH);
+	obj.setBoolean("hasWifi", chipInfo.features & CHIP_FEATURE_WIFI_BGN);
+	obj.setBoolean("hasBLE", chipInfo.features & CHIP_FEATURE_BLE);
+	obj.setBoolean("hasBT", chipInfo.features & CHIP_FEATURE_BT);
+	obj.setString("espVersion", System::getIDFVersion());
 	obj.setInt("freeHeap", System::getFreeHeapSize());
 	struct timeval tv;
 	gettimeofday(&tv, nullptr);

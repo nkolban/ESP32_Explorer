@@ -5,6 +5,7 @@
  *      Author: kolban
  */
 #include <string>
+#include <fstream>
 #include <iostream>
 #include <GPIO.h>
 #include "ESP32Explorer.h"
@@ -30,7 +31,8 @@ extern JsonObject I2S_JSON();
 extern JsonObject GPIO_JSON();
 extern JsonObject WIFI_JSON();
 extern JsonObject SYSTEM_JSON();
-extern JsonObject FILESYSTEM_GET_JSON(std::string path);
+extern JsonObject FILESYSTEM_GET_JSON_DIRECTORY(std::string path, bool isRecursive);
+extern JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path);
 
 static void handleTest(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
 	ESP_LOGD(tag, "handleTest called");
@@ -156,11 +158,140 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 	for (int i=3; i<parts.size(); i++) {
 		path += "/" + parts[i];
 	}
-	JsonObject obj = FILESYSTEM_GET_JSON(path.c_str());
+	File file(path);
+	JsonObject obj = JSON::createObject();
+	if (file.isDirectory()) {
+		obj = FILESYSTEM_GET_JSON_DIRECTORY(path.c_str(), true);
+	} else {
+		ESP_LOGD(tag, "Getting content of file, length: %d", file.length());
+		obj = FILESYSTEM_GET_JSON_CONTENT(path.c_str());
+	}
+
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
 } // handle_REST_FILE_GET
 
+
+static void handle_REST_FILE_DELETE(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	ESP_LOGD(tag, "handle_REST_FILE_DELETE");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	std::string path = "";
+	for (int i=3; i<parts.size(); i++) {
+		path += "/" + parts[i];
+	}
+	int rc = FileSystem::remove(path);
+	JsonObject obj = JSON::createObject();
+	obj.setInt("rc", rc);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_FILE_GET
+
+
+static void handle_REST_FILE_POST(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+	ESP_LOGD(tag, "handle_REST_FILE_POST");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	std::string path = "";
+	for (int i=3; i<parts.size(); i++) {
+		path += "/" + parts[i];
+	}
+	std::map<std::string, std::string> queryParams = pRequest->getQuery();
+	std::string directory = queryParams["directory"];
+	if (directory == "true") {
+		ESP_LOGD(tag, "Create a directory: %s", path.c_str());
+	}
+	//JsonObject obj = FILESYSTEM_GET_JSON(path.c_str());
+	int rc = FileSystem::mkdir(path);
+	JsonObject obj = JSON::createObject();
+	obj.setInt("rc", rc);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_FILE_POST
+
+class MyMultiPart : public WebServer::HTTPMultiPart {
+public:
+	void begin(std::string varName,	std::string fileName) {
+		ESP_LOGD(tag, "MyMultiPart begin(): varName=%s, fileName=%s",
+			varName.c_str(), fileName.c_str());
+		m_currentVar = varName;
+		if (varName == "path") {
+			m_path = "";
+		} else if (varName == "myfile") {
+			m_fileData = "";
+			m_fileName = fileName;
+		}
+	} // begin
+
+	void end() {
+		ESP_LOGD(tag, "MyMultiPart end()");
+		if (m_currentVar == "myfile") {
+			std::string fileName = m_path + "/" + m_fileName;
+			ESP_LOGD(tag, "Write to file: %s ... data: %s", fileName.c_str(), m_fileData.c_str());
+			/*
+			std::ofstream myfile;
+			myfile.open(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
+			myfile << m_fileData;
+			myfile.close();
+			*/
+			FILE *ffile = fopen(fileName.c_str(), "w");
+			fwrite(m_fileData.data(), m_fileData.length(), 1, ffile);
+			fclose(ffile);
+		}
+	} // end
+
+	void data(std::string data) {
+		ESP_LOGD(tag, "MyMultiPart data(): length=%d", data.length());
+		if (m_currentVar == "path") {
+			m_path += data;
+		}
+		else if (m_currentVar == "myfile") {
+			m_fileData += data;
+		}
+	} // data
+
+	void multipartEnd() {
+		ESP_LOGD(tag, "MyMultiPart multipartEnd()");
+	} // multipartEnd
+
+	void multipartStart() {
+		ESP_LOGD(tag, "MyMultiPart multipartStart()");
+	} // multipartStart
+
+private:
+	std::string m_fileName;
+	std::string m_path;
+	std::string m_currentVar;
+	std::string m_fileData;
+};
+
+class MyMultiPartFactory : public WebServer::HTTPMultiPartFactory {
+	WebServer::HTTPMultiPart *newInstance() {
+		return new MyMultiPart();
+	}
+};
+
+class MyWebSocketHandler : public WebServer::WebSocketHandler {
+	void onMessage(std::string message) {
+		ESP_LOGD(tag, "MyWebSocketHandler: Data length: %s", message.c_str());
+		JsonObject obj = JSON::parseObject(message);
+		std::string command = obj.getString("command");
+		ESP_LOGD(tag, "Command: %s", command.c_str());
+		if (command == "getfile") {
+			std::string path = obj.getString("path");
+			ESP_LOGD(tag, "   path: %s", path.c_str());
+			File f(path);
+			std::string fileContent = f.getContent(0, 1000);
+			ESP_LOGD(tag, "Length of file content is %d", fileContent.length());
+			// send response
+			sendData(fileContent);
+		}
+	}
+};
+
+class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
+	WebServer::WebSocketHandler *newInstance() {
+		return new MyWebSocketHandler();
+	}
+};
 
 class WebServerTask : public Task {
    void run(void *data) {
@@ -169,17 +300,21 @@ class WebServerTask : public Task {
   	  */
   	 WebServer *pWebServer = new WebServer();
   	 pWebServer->setRootPath("/spiflash");
-  	 pWebServer->addPathHandler("GET",  "\\/hello\\/.*",                         handleTest);
-  	 pWebServer->addPathHandler("GET",  "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
-  	 pWebServer->addPathHandler("GET",  "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
-  	 pWebServer->addPathHandler("GET",  "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
-  	 pWebServer->addPathHandler("POST", "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
-  	 pWebServer->addPathHandler("POST", "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
-  	 pWebServer->addPathHandler("POST", "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
-  	 pWebServer->addPathHandler("POST", "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
-  	 pWebServer->addPathHandler("POST", "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
-  	 pWebServer->addPathHandler("GET",  "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
-  	 pWebServer->addPathHandler("GET",  "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
+  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
+  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
+  	 pWebServer->setMultiPartFactory(new MyMultiPartFactory());
+  	 pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
    }
 };
@@ -206,7 +341,7 @@ void ESP32_Explorer::start() {
 	//FileSystem::dumpDirectory("/spiflash/");
 
 	WebServerTask *webServerTask = new WebServerTask();
-	webServerTask->setStackSize(20000);
+	webServerTask->setStackSize(40000);
 	webServerTask->start();
 
 	TFTPTask *pTFTPTask = new TFTPTask();

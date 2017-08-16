@@ -1,40 +1,103 @@
 $(function() {
-	var ESP32_IP = "192.168.1.99";
+	const ESP32_IP   = "192.168.1.99";
+	const ESP32_PORT = 80;
+	var fileNameDeferred = null;
+	const FILE_DIRECTORY = 2; // Type of file that is a directory
+	const FILE_REGULAR   = 1; // Type of file that is a regular file
+	
+	function getFileNameDialog() {
+		fileNameDeferred = jQuery.Deferred();
+		$("#fileNameText").val("");
+		$("#fileNameDialog").dialog("open");
+		return fileNameDeferred;
+	}
+	
+	
+	function doRest(path, callback, obj) {
+		obj.url      = "http://" + ESP32_IP + ":" + ESP32_PORT + path;
+		obj.dataType = "json";
+		obj.success  = function(data, textStatus, jqXHR) {
+			if (callback) {
+				callback(data);
+			}
+		};
+		obj.error    = function(jqXHR, textStatus, errorThrown) {
+			console.log("AJAX error");
+			debugger;
+		};
+		jQuery.ajax(obj);
+	} // doRest
 	
 	function getData(path, callback) {
-		jQuery.ajax({
-			url : "http://" + ESP32_IP + ":80" + path,
-			method : "GET",
-			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
-				if (callback) {
-					callback(data);
-				}
-			},
-			error : function(jqXHR, textStatus, errorThrown) {
-				console.log("AJAX error");
-				debugger;
-			}
+		doRest(path, callback, {
+			method   : "GET"
 		});
 	} // getData
-
 	
+	function deleteData(path, callback) {
+		doRest(path, callback, {
+			method   : "DELETE"
+		});
+	} // deleteData
+
 	function postData(path, callback) {
-		jQuery.ajax({
-			url : "http://" + ESP32_IP + ":80" + path,
-			method : "POST",
-			dataType : "json",
-			success : function(data, textStatus, jqXHR) {
-				if (callback) {
-					callback(data);
-				}
-			},
-			error : function(jqXHR, textStatus, errorThrown) {
-				console.log("AJAX error");
-				debugger;
-			}
+		doRest(path, callback, {
+			method   : "POST"
 		});
 	} // postData
+	
+	
+	function addFileDirectory(childrenArray, fileEntries) {
+/*
+ * File entries is an array of objects
+ * path: Full path name
+ * name: name of file/directory
+ * directory: true/false (is this a directory)
+ * dir: [child path entries]
+ */
+		for (var i=0; i<fileEntries.length; i++) {
+			var newChild = {
+				text: fileEntries[i].name,
+				icon: fileEntries[i].directory?"jstree-folder":"jstree-file",
+				data: {
+					path: fileEntries[i].path,
+					directory: fileEntries[i].directory
+				}
+			}
+			if (fileEntries[i].directory) {
+				var newChildren = [];
+				addFileDirectory(newChildren, fileEntries[i].dir);
+				newChild.children = newChildren;
+			}
+			childrenArray.push(newChild);
+		}
+	} // addFileDirectory
+	
+	
+	function buildFileSystemTree(path) {
+		if (path.length == 0) {
+			return;
+		}
+		console.log("Get the directory at: " + path);
+		getData("/ESP32/FILE" + path, function(data) {
+			// We now have data!
+			var root = {
+				text: path,
+				state: {
+					opened: true
+				},
+				icon: "jstree-folder",
+				children: [],
+				data: {
+					path: path,
+					directory: true
+				}
+			}
+			addFileDirectory(root.children, data.dir);
+			$('#fileTree').jstree(true).settings.core.data = root;
+			$("#fileTree").jstree(true).refresh();
+		});
+	} // buildFileSystemTree
 
 	
 	function showGPIODialog(gpio) {
@@ -73,6 +136,7 @@ $(function() {
 		}
 	} // typeToString
 
+	
 	function subTypeToString(subtype) {
 		switch (subtype) {
 		case 0x00:
@@ -92,8 +156,9 @@ $(function() {
 		default:
 			return subtype.toString();
 		}
-	}
+	} // subTypeToString
 
+	
 	console.log("ESP32Explorer loading");
 	$("#myTabs").tabs();
 	$("#systemTabs").tabs();
@@ -168,14 +233,19 @@ $(function() {
 		table.append(tr);
 	} // End of loop for GPIO items.
 
+	
 	$("#systemRefreshButton").button().click(
 		function() {
 			getData("/ESP32/SYSTEM", function(data) {
-				$("#systemJsonText").val(JSON.stringify(data, null, "  "));
-				// Delete all the partition rows
+
+				$("#systemJsonText").val(JSON.stringify(data, null, "  ")); // Log the JSON text
+				$("#espVersionSystemGeneralTab").text(data.espVersion);
+				$("#coresSystemGeneralTab").text(data.cores);
+				$("#revisionSystemGeneralTab").text(data.revision);
 				$("#freeHeapSystemGeneralTab").text(data.freeHeap);
 				$("#timeSystemGeneralTab").text(data.time);	
 				$("#taskCountFreeRTOSTab").text(data.taskCount);
+				
 				var table = $("#partitionTable");
 				table.find("> tr").remove();
 				// debugger;
@@ -196,7 +266,7 @@ $(function() {
 					row.append("<td>" + data.partitions[i].label + "</td>");
 					table.append(row);
 				}
-			})
+			}); // getData
 		}
 	);
 
@@ -245,10 +315,79 @@ $(function() {
 		if (path.length == 0) {
 			return;
 		}
-		console.log("Get the directory at: " + path);
-		getData("/ESP32/FILE" + path, function(data) {
-			debugger;
-		});
+		buildFileSystemTree(path);
+	});
+	
+	$('#fileTree').jstree({
+		plugins: ["contextmenu"],
+		contextmenu: {
+			items: function(node) {
+				var n = $('#fileTree').jstree(true).get_node(node);
+				var items = {};
+				if (n.data.directory) {
+					items.createDir = {
+			   		label: "Create",
+			   		action: function(x) {
+			   			var n= $('#fileTree').jstree(true).get_node(x.reference);
+			   			console.log("Create a directory as a child of " + n.data.path);
+			   			getFileNameDialog().done(function(fileName) {
+				   			postData("/ESP32/FILE" + n.data.path + "/" + fileName + "?directory=true");
+			   			});
+			   			//debugger;
+			   		}
+			   	}
+				}
+				else {
+					items.downloadFile = {
+			   		label: "Download",
+			   		action: function(x) {
+			   			var n = $('#fileTree').jstree(true).get_node(x.reference);
+			   			console.log("Download the file called " + n.data.path);
+			   			// Form a web socket to download the data ...
+			   			var ws = new WebSocket("ws://" + ESP32_IP + ":" + ESP32_PORT);
+			   			ws.onopen = function() {
+			   				console.log("Web Socket now open!  Sending command ...");
+			   				ws.send(JSON.stringify({
+			   					command: "getfile",
+			   					path: n.data.path
+			   				}));
+			   				ws.close();
+			   			} 
+			   		}
+					};
+					items.deleteFile = {
+			   		label: "Delete",
+			   		action: function(x) {
+			   			var n= $('#fileTree').jstree(true).get_node(x.reference);
+			   			console.log("Delete the file called " + n.data.path);
+			   			deleteData("/ESP32/FILE" + n.data.path);
+			   		}
+			   	};
+				}
+			   return items;
+			}
+		}
+	});
+	
+	$("#fileUploadForm").fileupload({
+		add: function(e, data) {
+
+			var selected = $("#fileTree").jstree("get_selected");
+
+			if (selected.length > 0) {
+				var node = $("#fileTree").jstree(true).get_node(selected[0]);
+				data.formData = { path: node.data.path };
+				data.submit();
+			}
+			//debugger;
+		},
+		done: function(e, data) {
+			var path = $("#rootPathText").val().trim();
+			if (path.length == 0) {
+				return;
+			}
+			buildFileSystemTree(path);	
+		}
 	});
 	
 	$("#gpioDialog").dialog({
@@ -259,6 +398,22 @@ $(function() {
 				text: "Close",
 				click: function() {
 					$("#gpioDialog").dialog("close");
+				}
+			}
+		]
+	});
+	
+	$("#fileNameDialog").dialog({
+		autoOpen: false,
+		modal: true,
+		title: "File name",
+		width: 305,
+		buttons: [
+			{
+				text: "OK",
+				click: function() {
+					fileNameDeferred.resolve($("#fileNameText").val());
+					$("#fileNameDialog").dialog("close");
 				}
 			}
 		]
