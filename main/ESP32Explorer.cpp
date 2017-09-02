@@ -25,7 +25,7 @@
 
 #include <esp_wifi.h>
 
-static char tag[] = "ESP32Explorer";
+static const char* LOG_TAG = "ESP32Explorer";
 
 extern JsonObject I2S_JSON();
 extern JsonObject GPIO_JSON();
@@ -35,22 +35,22 @@ extern JsonObject FILESYSTEM_GET_JSON_DIRECTORY(std::string path, bool isRecursi
 extern JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path);
 
 static void handleTest(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handleTest called");
-	ESP_LOGD(tag, "Path: %s" ,pRequest->getPath().c_str());
-	ESP_LOGD(tag, "Method: %s", pRequest->getMethod().c_str());
-	ESP_LOGD(tag, "Query:");
+	ESP_LOGD(LOG_TAG, "handleTest called");
+	ESP_LOGD(LOG_TAG, "Path: %s" ,pRequest->getPath().c_str());
+	ESP_LOGD(LOG_TAG, "Method: %s", pRequest->getMethod().c_str());
+	ESP_LOGD(LOG_TAG, "Query:");
 	std::map<std::string, std::string> queryMap = pRequest->getQuery();
 	std::map<std::string, std::string>::iterator itr;
 	for (itr=queryMap.begin(); itr != queryMap.end(); itr++) {
-		ESP_LOGD(tag, "name: %s, value: %s", itr->first.c_str(), itr->second.c_str());
+		ESP_LOGD(LOG_TAG, "name: %s, value: %s", itr->first.c_str(), itr->second.c_str());
 	}
-	ESP_LOGD(tag, "Body: %s", pRequest->getBody().c_str());
+	ESP_LOGD(LOG_TAG, "Body: %s", pRequest->getBody().c_str());
 	pResponse->sendData("hello!");
 } // handleTest
 
 
 static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_SYSTEM");
+	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = SYSTEM_JSON();
 	pResponse->sendData(obj.toString());
@@ -59,7 +59,7 @@ static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTP
 
 
 static void handle_REST_I2S(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_I2S");
+	ESP_LOGD(LOG_TAG, "handle_REST_I2S");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = I2S_JSON();
 	pResponse->sendData(obj.toString());
@@ -68,7 +68,7 @@ static void handle_REST_I2S(WebServer::HTTPRequest *pRequest, WebServer::HTTPRes
 
 
 static void handle_REST_GPIO(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_GPIO");
+	ESP_LOGD(LOG_TAG, "handle_REST_GPIO");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = GPIO_JSON();
 	pResponse->sendData(obj.toString());
@@ -77,7 +77,7 @@ static void handle_REST_GPIO(WebServer::HTTPRequest *pRequest, WebServer::HTTPRe
 
 
 static void handle_REST_GPIO_SET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_GPIO_SET");
+	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
 	int gpio;
@@ -90,7 +90,7 @@ static void handle_REST_GPIO_SET(WebServer::HTTPRequest *pRequest, WebServer::HT
 
 
 static void handle_REST_GPIO_CLEAR(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_GPIO_CLEAR");
+	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_CLEAR");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
 	int gpio;
@@ -103,7 +103,7 @@ static void handle_REST_GPIO_CLEAR(WebServer::HTTPRequest *pRequest, WebServer::
 
 
 static void handle_REST_GPIO_DIRECTION_INPUT(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_GPIO_DIRECTION_INPUT");
+	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_INPUT");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
 	int gpio;
@@ -116,7 +116,7 @@ static void handle_REST_GPIO_DIRECTION_INPUT(WebServer::HTTPRequest *pRequest, W
 
 
 static void handle_REST_GPIO_DIRECTION_OUTPUT(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_GPIO_DIRECTION_OUTPUT");
+	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_OUTPUT");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
 	int gpio;
@@ -128,8 +128,8 @@ static void handle_REST_GPIO_DIRECTION_OUTPUT(WebServer::HTTPRequest *pRequest, 
 } // handle_REST_GPIO_DIRECTION_OUTPUT
 
 
-static void handle_REST_WiFi(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_WIFI");
+static void handle_REST_WiFi(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_WIFI");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = WIFI_JSON();
 	pResponse->sendData(obj.toString());
@@ -137,8 +137,8 @@ static void handle_REST_WiFi(WebServer::HTTPRequest *pRequest, WebServer::HTTPRe
 } // handle_REST_WiFi
 
 
-static void handle_REST_LOG_SET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_LOG_SET");
+static void handle_REST_LOG_SET(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_LOG_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
 	int logLevel;
@@ -152,7 +152,7 @@ static void handle_REST_LOG_SET(WebServer::HTTPRequest *pRequest, WebServer::HTT
 
 
 static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_FILE_GET");
+	ESP_LOGD(LOG_TAG, "handle_REST_FILE_GET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -163,7 +163,7 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 	if (file.isDirectory()) {
 		obj = FILESYSTEM_GET_JSON_DIRECTORY(path.c_str(), true);
 	} else {
-		ESP_LOGD(tag, "Getting content of file, length: %d", file.length());
+		ESP_LOGD(LOG_TAG, "Getting content of file, length: %d", file.length());
 		obj = FILESYSTEM_GET_JSON_CONTENT(path.c_str());
 	}
 
@@ -173,7 +173,7 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 
 
 static void handle_REST_FILE_DELETE(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_FILE_DELETE");
+	ESP_LOGD(LOG_TAG, "handle_REST_FILE_DELETE");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -187,8 +187,8 @@ static void handle_REST_FILE_DELETE(WebServer::HTTPRequest *pRequest, WebServer:
 } // handle_REST_FILE_GET
 
 
-static void handle_REST_FILE_POST(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
-	ESP_LOGD(tag, "handle_REST_FILE_POST");
+static void handle_REST_FILE_POST(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_FILE_POST");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -197,7 +197,7 @@ static void handle_REST_FILE_POST(WebServer::HTTPRequest *pRequest, WebServer::H
 	std::map<std::string, std::string> queryParams = pRequest->getQuery();
 	std::string directory = queryParams["directory"];
 	if (directory == "true") {
-		ESP_LOGD(tag, "Create a directory: %s", path.c_str());
+		ESP_LOGD(LOG_TAG, "Create a directory: %s", path.c_str());
 	}
 	//JsonObject obj = FILESYSTEM_GET_JSON(path.c_str());
 	int rc = FileSystem::mkdir(path);
@@ -210,7 +210,7 @@ static void handle_REST_FILE_POST(WebServer::HTTPRequest *pRequest, WebServer::H
 class MyMultiPart : public WebServer::HTTPMultiPart {
 public:
 	void begin(std::string varName,	std::string fileName) {
-		ESP_LOGD(tag, "MyMultiPart begin(): varName=%s, fileName=%s",
+		ESP_LOGD(LOG_TAG, "MyMultiPart begin(): varName=%s, fileName=%s",
 			varName.c_str(), fileName.c_str());
 		m_currentVar = varName;
 		if (varName == "path") {
@@ -222,10 +222,10 @@ public:
 	} // begin
 
 	void end() {
-		ESP_LOGD(tag, "MyMultiPart end()");
+		ESP_LOGD(LOG_TAG, "MyMultiPart end()");
 		if (m_currentVar == "myfile") {
 			std::string fileName = m_path + "/" + m_fileName;
-			ESP_LOGD(tag, "Write to file: %s ... data: %s", fileName.c_str(), m_fileData.c_str());
+			ESP_LOGD(LOG_TAG, "Write to file: %s ... data: %s", fileName.c_str(), m_fileData.c_str());
 			/*
 			std::ofstream myfile;
 			myfile.open(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
@@ -239,7 +239,7 @@ public:
 	} // end
 
 	void data(std::string data) {
-		ESP_LOGD(tag, "MyMultiPart data(): length=%d", data.length());
+		ESP_LOGD(LOG_TAG, "MyMultiPart data(): length=%d", data.length());
 		if (m_currentVar == "path") {
 			m_path += data;
 		}
@@ -249,11 +249,11 @@ public:
 	} // data
 
 	void multipartEnd() {
-		ESP_LOGD(tag, "MyMultiPart multipartEnd()");
+		ESP_LOGD(LOG_TAG, "MyMultiPart multipartEnd()");
 	} // multipartEnd
 
 	void multipartStart() {
-		ESP_LOGD(tag, "MyMultiPart multipartStart()");
+		ESP_LOGD(LOG_TAG, "MyMultiPart multipartStart()");
 	} // multipartStart
 
 private:
@@ -264,31 +264,31 @@ private:
 };
 
 class MyMultiPartFactory : public WebServer::HTTPMultiPartFactory {
-	WebServer::HTTPMultiPart *newInstance() {
+	WebServer::HTTPMultiPart* newInstance() {
 		return new MyMultiPart();
 	}
 };
 
 class MyWebSocketHandler : public WebServer::WebSocketHandler {
 	void onMessage(std::string message) {
-		ESP_LOGD(tag, "MyWebSocketHandler: Data length: %s", message.c_str());
+		ESP_LOGD(LOG_TAG, "MyWebSocketHandler: Data length: %s", message.c_str());
 		JsonObject obj = JSON::parseObject(message);
 		std::string command = obj.getString("command");
-		ESP_LOGD(tag, "Command: %s", command.c_str());
+		ESP_LOGD(LOG_TAG, "Command: %s", command.c_str());
 		if (command == "getfile") {
 			std::string path = obj.getString("path");
-			ESP_LOGD(tag, "   path: %s", path.c_str());
+			ESP_LOGD(LOG_TAG, "   path: %s", path.c_str());
 			File f(path);
 			std::string fileContent = f.getContent(0, 1000);
-			ESP_LOGD(tag, "Length of file content is %d", fileContent.length());
+			ESP_LOGD(LOG_TAG, "Length of file content is %d", fileContent.length());
 			// send response
 			sendData(fileContent);
 		}
-	}
-};
+	} // onMessage
+}; // MyWebSocketHandler
 
 class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
-	WebServer::WebSocketHandler *newInstance() {
+	WebServer::WebSocketHandler* newInstance() {
 		return new MyWebSocketHandler();
 	}
 };
@@ -298,7 +298,7 @@ class WebServerTask : public Task {
   	 /*
   	  * Create a WebServer and register handlers for REST requests.
   	  */
-  	 WebServer *pWebServer = new WebServer();
+  	 WebServer* pWebServer = new WebServer();
   	 pWebServer->setRootPath("/spiflash");
   	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
@@ -334,17 +334,17 @@ ESP32_Explorer::~ESP32_Explorer() {
 }
 
 void ESP32_Explorer::start() {
-	FATFS_VFS *fs = new FATFS_VFS("/spiflash", "storage");
+	FATFS_VFS* fs = new FATFS_VFS("/spiflash", "storage");
 	fs->mount();
 	//FileSystem::mkdir("/spiflash/mydir2");
 	//FileSystem::mkdir("/spiflash/mydir2/fred");
 	//FileSystem::dumpDirectory("/spiflash/");
 
-	WebServerTask *webServerTask = new WebServerTask();
+	WebServerTask* webServerTask = new WebServerTask();
 	webServerTask->setStackSize(40000);
 	webServerTask->start();
 
-	TFTPTask *pTFTPTask = new TFTPTask();
+	TFTPTask* pTFTPTask = new TFTPTask();
 	pTFTPTask->setStackSize(8000);
 	pTFTPTask->start();
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_25);
