@@ -1,6 +1,6 @@
 ## ESP32 Explorer
 
-**WARNING!! - VERY EARLY CODE **
+** WARNING!! - VERY EARLY CODE **
 
 A utility library / application for investigating the ESP32.
 
@@ -21,11 +21,11 @@ The purpose of the project is to produce a library which, when linked with your 
 
 When linked with your application, it will start listening as a network endpoint (an HTTP server) to accept external calls for information and receive external calls to change state and data.  In addition to the library you link with your ESP32 app, there is a web page that can be opened which presents the information in a series of tabbed pages.
 
-![](/home/kolban/esp32/esptest/apps/workspace/ESP32_Explorer/docs/images/System.png) 
+![](docs/images/System.png) 
 
 Some pages have additional tabs on them.
 
 ## File System
 The File System page shows the file system found on the ESP32.  From here you can see if the files you expect to be available are present.  You also have the opportunity to upload new and updated files.
 
-![](/home/kolban/esp32/esptest/apps/workspace/ESP32_Explorer/docs/images/FileSystem.png) 
+![](docs/images/FileSystem.png) 
