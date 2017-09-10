@@ -17,7 +17,7 @@ JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path) {
 
 	JsonObject obj = JSON::createObject();
 	if (rc == -1) {
-		ESP_LOGE(tag, "Failed to stat file, errno=%s", strerror(errno));
+		ESP_LOGE(tag, "Failed to stat file %s, errno=%s", path.c_str(), strerror(errno));
 		obj.setInt("errno", errno);
 		return obj;
 	}

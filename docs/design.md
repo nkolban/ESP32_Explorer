@@ -5,8 +5,6 @@ a browser connects to the ESP32 hosted Web Server, it is these files that are br
 executed.  The files will then present an attractive user interface for the user to navigate across the distinct
 parts of the ESP32 environment.
 
-### Web Server
-The Web Server technology used is the Mongoose networking library from Cesanta.
 
 ### File system
 The file system used is the FATFS supplied as part of ESP-IDF.

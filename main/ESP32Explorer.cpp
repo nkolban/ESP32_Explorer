@@ -15,7 +15,7 @@
 #include <FileSystem.h>
 #include <FreeRTOS.h>
 #include <Task.h>
-#include <WebServer.h>
+#include <HttpServer.h>
 #include <TFTP.h>
 #include <JSON.h>
 #include <WiFi.h>
@@ -34,7 +34,8 @@ extern JsonObject SYSTEM_JSON();
 extern JsonObject FILESYSTEM_GET_JSON_DIRECTORY(std::string path, bool isRecursive);
 extern JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path);
 
-static void handleTest(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+
+static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handleTest called");
 	ESP_LOGD(LOG_TAG, "Path: %s" ,pRequest->getPath().c_str());
 	ESP_LOGD(LOG_TAG, "Method: %s", pRequest->getMethod().c_str());
@@ -49,7 +50,7 @@ static void handleTest(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse
 } // handleTest
 
 
-static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_SYSTEM(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = SYSTEM_JSON();
@@ -58,7 +59,7 @@ static void handle_REST_SYSTEM(WebServer::HTTPRequest *pRequest, WebServer::HTTP
 } // handle_REST_GPIO
 
 
-static void handle_REST_I2S(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_I2S(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_I2S");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = I2S_JSON();
@@ -67,7 +68,7 @@ static void handle_REST_I2S(WebServer::HTTPRequest *pRequest, WebServer::HTTPRes
 } // handle_REST_I2S
 
 
-static void handle_REST_GPIO(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_GPIO(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = GPIO_JSON();
@@ -76,7 +77,7 @@ static void handle_REST_GPIO(WebServer::HTTPRequest *pRequest, WebServer::HTTPRe
 } // handle_REST_GPIO
 
 
-static void handle_REST_GPIO_SET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_GPIO_SET(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
@@ -89,7 +90,7 @@ static void handle_REST_GPIO_SET(WebServer::HTTPRequest *pRequest, WebServer::HT
 } // handle_REST_GPIO_SET
 
 
-static void handle_REST_GPIO_CLEAR(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_CLEAR");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
@@ -102,7 +103,7 @@ static void handle_REST_GPIO_CLEAR(WebServer::HTTPRequest *pRequest, WebServer::
 } // handle_REST_GPIO_CLEAR
 
 
-static void handle_REST_GPIO_DIRECTION_INPUT(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_INPUT");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
@@ -115,7 +116,7 @@ static void handle_REST_GPIO_DIRECTION_INPUT(WebServer::HTTPRequest *pRequest, W
 } // handle_REST_GPIO_DIRECTION_INPUT
 
 
-static void handle_REST_GPIO_DIRECTION_OUTPUT(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_OUTPUT");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
@@ -128,7 +129,7 @@ static void handle_REST_GPIO_DIRECTION_OUTPUT(WebServer::HTTPRequest *pRequest, 
 } // handle_REST_GPIO_DIRECTION_OUTPUT
 
 
-static void handle_REST_WiFi(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+static void handle_REST_WiFi(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_WIFI");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = WIFI_JSON();
@@ -137,7 +138,7 @@ static void handle_REST_WiFi(WebServer::HTTPRequest* pRequest, WebServer::HTTPRe
 } // handle_REST_WiFi
 
 
-static void handle_REST_LOG_SET(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_LOG_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
@@ -151,7 +152,7 @@ static void handle_REST_LOG_SET(WebServer::HTTPRequest* pRequest, WebServer::HTT
 } // handle_REST_LOG_SET
 
 
-static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_GET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
@@ -172,7 +173,7 @@ static void handle_REST_FILE_GET(WebServer::HTTPRequest *pRequest, WebServer::HT
 } // handle_REST_FILE_GET
 
 
-static void handle_REST_FILE_DELETE(WebServer::HTTPRequest *pRequest, WebServer::HTTPResponse *pResponse) {
+static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_DELETE");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
@@ -187,7 +188,7 @@ static void handle_REST_FILE_DELETE(WebServer::HTTPRequest *pRequest, WebServer:
 } // handle_REST_FILE_GET
 
 
-static void handle_REST_FILE_POST(WebServer::HTTPRequest* pRequest, WebServer::HTTPResponse* pResponse) {
+static void handle_REST_FILE_POST(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_POST");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
@@ -207,6 +208,7 @@ static void handle_REST_FILE_POST(WebServer::HTTPRequest* pRequest, WebServer::H
 	JSON::deleteObject(obj);
 } // handle_REST_FILE_POST
 
+/*
 class MyMultiPart : public WebServer::HTTPMultiPart {
 public:
 	void begin(std::string varName,	std::string fileName) {
@@ -226,12 +228,12 @@ public:
 		if (m_currentVar == "myfile") {
 			std::string fileName = m_path + "/" + m_fileName;
 			ESP_LOGD(LOG_TAG, "Write to file: %s ... data: %s", fileName.c_str(), m_fileData.c_str());
-			/*
-			std::ofstream myfile;
-			myfile.open(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
-			myfile << m_fileData;
-			myfile.close();
-			*/
+
+			//std::ofstream myfile;
+			//myfile.open(fileName, std::ios::out | std::ios::binary | std::ios::trunc);
+			//myfile << m_fileData;
+			//myfile.close();
+
 			FILE *ffile = fopen(fileName.c_str(), "w");
 			fwrite(m_fileData.data(), m_fileData.length(), 1, ffile);
 			fclose(ffile);
@@ -268,7 +270,8 @@ class MyMultiPartFactory : public WebServer::HTTPMultiPartFactory {
 		return new MyMultiPart();
 	}
 };
-
+*/
+/*
 class MyWebSocketHandler : public WebServer::WebSocketHandler {
 	void onMessage(std::string message) {
 		ESP_LOGD(LOG_TAG, "MyWebSocketHandler: Data length: %s", message.c_str());
@@ -292,13 +295,14 @@ class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
 		return new MyWebSocketHandler();
 	}
 };
+*/
 
 class WebServerTask : public Task {
    void run(void *data) {
   	 /*
   	  * Create a WebServer and register handlers for REST requests.
   	  */
-  	 WebServer* pWebServer = new WebServer();
+  	 HttpServer* pWebServer = new HttpServer();
   	 pWebServer->setRootPath("/spiflash");
   	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
@@ -313,8 +317,8 @@ class WebServerTask : public Task {
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
   	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
-  	 pWebServer->setMultiPartFactory(new MyMultiPartFactory());
-  	 pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
+  	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
+  	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
    }
 };
@@ -346,7 +350,7 @@ void ESP32_Explorer::start() {
 
 	TFTPTask* pTFTPTask = new TFTPTask();
 	pTFTPTask->setStackSize(8000);
-	pTFTPTask->start();
+	//pTFTPTask->start();
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_25);
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_26);
 	ESP32CPP::GPIO::high(GPIO_NUM_25);
