@@ -51,7 +51,7 @@ JsonObject GPIO_JSON() {
 	tmpObj.setBoolean("MTDO",  (GPIO.strap.strapping & (1<<1)) != 0);
 	tmpObj.setBoolean("GPIO5", (GPIO.strap.strapping & (1<<0)) != 0);
 	obj.setObject("strapping", tmpObj);
-
+/*
 	tmpArr = JSON::createArray();
 	for (i=0; i<256; i++) {
 		tmpObj = JSON::createObject();
@@ -71,6 +71,6 @@ JsonObject GPIO_JSON() {
 		tmpObj.setInt("func_sel",        GPIO.func_out_sel_cfg[i].func_sel);
 		tmpArr.addObject(tmpObj);
 	}
-	obj.setArray("func_out_sel_cfg", tmpArr);
+	obj.setArray("func_out_sel_cfg", tmpArr);*/
 	return obj;
 }

@@ -315,19 +315,44 @@ static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse)
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
-	#define PIN_SDA 22
-	#define PIN_CLK 21
+	std::vector<std::string> parts = pRequest->pathSplit();
+	//std::stringstream stream(parts[4]);
+	uint8_t SDA, SCL, I2C_NUM, SPEED, I2C_MODE;
+	//stream >> SDA;
+	//std::stringstream stream1(parts[5]);
+	//stream1 >> SCL;
+	I2C_NUM = atoi(parts[4].c_str());
+	SDA = atoi(parts[5].c_str());
+	SCL = atoi(parts[6].c_str());
+	SPEED = atoi(parts[7].c_str());
+	I2C_MODE = atoi(parts[8].c_str());
 
 	i2c_config_t conf;
 	conf.mode = I2C_MODE_MASTER;
-	conf.sda_io_num = (gpio_num_t)PIN_SDA;
-	conf.scl_io_num = (gpio_num_t)PIN_CLK;
+	conf.sda_io_num = (gpio_num_t)SDA;
+	conf.scl_io_num = (gpio_num_t)SCL;
 	conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
 	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-	conf.master.clk_speed = 400000;
-	::i2c_param_config(I2C_NUM_0, &conf);
-	::i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+	conf.master.clk_speed = SPEED;
+	::i2c_param_config((i2c_port_t)I2C_NUM, &conf);
+	::i2c_driver_install((i2c_port_t)I2C_NUM, (i2c_mode_t)I2C_MODE, 0, 0, 0);
 	ESP_LOGI(LOG_TAG, "<< init_i2c");
+
+	JsonObject obj = I2C_JSON();
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_I2C
+
+static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse) {
+	ESP_LOGD(LOG_TAG, ">> delete_I2C");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	uint8_t I2C_NUM;
+	I2C_NUM = atoi(parts[4].c_str());
+
+	::i2c_driver_delete((i2c_port_t)I2C_NUM);
+	ESP_LOGI(LOG_TAG, "<< delete_i2c");
 
 	JsonObject obj = I2C_JSON();
 	pResponse->sendData(obj.toString());
@@ -365,8 +390,9 @@ class WebServerTask : public Task {
 	  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
 	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
 	  	 //pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C$",                      handle_REST_I2C);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT$",              handle_REST_I2C_INIT);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT",              handle_REST_I2C_INIT);
 	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/DEINIT",              handle_REST_I2C_CLOSE);
 	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
