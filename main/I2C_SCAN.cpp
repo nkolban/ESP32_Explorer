@@ -25,7 +25,7 @@ JsonObject I2C_SCAN_JSON() {
 		::i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, 1 /* expect ack */);
 		::i2c_master_stop(cmd);
 
-		espRc = ::i2c_master_cmd_begin(I2C_NUM_0, cmd, 100/portTICK_PERIOD_MS);
+		espRc = ::i2c_master_cmd_begin(I2C_NUM_0, cmd, 10/portTICK_PERIOD_MS);
 		char nr[3];
 		if (i%16 == 0) {
 			sprintf(nr, "address %.2x", i-16);

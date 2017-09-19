@@ -432,8 +432,18 @@ $(function() {
 		});
 	});
 
-	$("#i2cInitButton").button().click(function() {
-		postData("/ESP32/I2C/INIT");
+	$("#i2cInitButton2").button().click(function() {
+		var port = $('input[name=i2c_port]:checked').val();
+		var sda = $("#i2c_sda").val();
+		var scl = $("#i2c_scl").val();
+		var speed = $("#i2c_speed").val();
+		var mode = $('input[name=i2c_mode]:checked').val();
+		postData("/ESP32/I2C/INIT/" + port + "/" + sda + "/" + scl + "/" + speed + "/" + mode);
+	});
+
+	$("#i2cCloseButton").button().click(function() {
+		var port = $('input[name=i2c_port]:checked').val();
+		postData("/ESP32/I2C/DEINIT/" + port);
 	});
 
 	var table = $("#i2cTable");
@@ -441,16 +451,15 @@ $(function() {
 		var tr = $("<tr>");
 		for (var i=0; i<16; i++) {
 			var i2cNum = j*16 + i;
-			if(i2cNum < 121){
+			if(i2cNum < 120){
 				var td = $("<td>");
 				var div;
 				var wDiv;
-				if(i2cNum > 2){
 					wDiv = $("<div class='flexHorizCenter'>");
 					div = $("<div>");
 					div.attr("id", "i2c" + i2cNum + "Icon");
 					wDiv.append(div);
-				}
+				
 				div = $("<div class='flexHorizCenter' style='margin-left: 4px; font-size: x-large;'>");
 				div.text("" + i2cNum);
 				wDiv.append(div);
