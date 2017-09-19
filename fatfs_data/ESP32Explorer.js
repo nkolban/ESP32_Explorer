@@ -164,6 +164,7 @@ $(function() {
 	$("#systemTabs").tabs();
 	$("#gpioTabs").tabs();
 	$("#wifiTabs").tabs();
+	$("#i2cTabs").tabs();
 	$("#systemLoggingTab [name='systemLogging']").checkboxradio().on("change", function(event) {
 		postData("/ESP32/LOG/SET/" + $(event.target).attr("data-logLevel"));
 	});
@@ -418,4 +419,59 @@ $(function() {
 			}
 		]
 	});
+	
+	$("#i2cScanButton").button().click(function() {
+		getData("/ESP32/I2C/SCAN", function(data) {
+			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
+			// Loop through each of the I2C address.
+			for (var i=3; i<123; i++) {
+				$("#i2c" + i + "Checkbox" ).attr("checked", data.present[i-3]);
+				$("#i2c" + i + "Icon").toggleClass("outputImage", data.present[i-3]);
+				$("#i2c" + i + "Icon").toggleClass("", !data.present[i-3]);
+			}
+		});
+	});
+
+	$("#i2cInitButton").button().click(function() {
+		postData("/ESP32/I2C/INIT");
+	});
+
+	var table = $("#i2cTable");
+	for (var j=0; j<8; j++) {
+		var tr = $("<tr>");
+		for (var i=0; i<16; i++) {
+			var i2cNum = j*16 + i;
+			if(i2cNum < 121){
+				var td = $("<td>");
+				var div;
+				var wDiv;
+				if(i2cNum > 2){
+					wDiv = $("<div class='flexHorizCenter'>");
+					div = $("<div>");
+					div.attr("id", "i2c" + i2cNum + "Icon");
+					wDiv.append(div);
+				}
+				div = $("<div class='flexHorizCenter' style='margin-left: 4px; font-size: x-large;'>");
+				div.text("" + i2cNum);
+				wDiv.append(div);
+				
+				td.append(wDiv);
+				
+				wDiv = $("<div class='flexHorizCenter'>");
+				if(i2cNum > 2){
+					var checkBox = $("<input type='checkbox'>");
+					checkBox.attr("data-i2c", i2cNum );
+					
+					checkBox.attr("id", "i2c" + i2cNum + "Checkbox");
+					checkBox.attr("disabled", true);
+					wDiv.append(checkBox);
+				}
+				td.append(wDiv);
+	
+				tr.append(td);
+			}
+		}
+		table.append(tr);
+	} // End of loop for I2C address.
+
 });

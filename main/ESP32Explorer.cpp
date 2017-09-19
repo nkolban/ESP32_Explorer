@@ -20,6 +20,7 @@
 #include <JSON.h>
 #include <WiFi.h>
 #include <stdio.h>
+#include <driver/i2c.h>
 
 #include <GeneralUtils.h>
 
@@ -33,7 +34,8 @@ extern JsonObject WIFI_JSON();
 extern JsonObject SYSTEM_JSON();
 extern JsonObject FILESYSTEM_GET_JSON_DIRECTORY(std::string path, bool isRecursive);
 extern JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path);
-
+extern JsonObject I2C_JSON();
+extern JsonObject I2C_SCAN_JSON();
 
 static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handleTest called");
@@ -52,6 +54,7 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_SYSTEM(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = SYSTEM_JSON();
 	pResponse->sendData(obj.toString());
@@ -61,6 +64,7 @@ static void handle_REST_SYSTEM(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_I2S(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_I2S");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = I2S_JSON();
 	pResponse->sendData(obj.toString());
@@ -70,6 +74,7 @@ static void handle_REST_I2S(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_GPIO(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = GPIO_JSON();
 	pResponse->sendData(obj.toString());
@@ -79,6 +84,7 @@ static void handle_REST_GPIO(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_GPIO_SET(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_SET");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
 	int gpio;
@@ -92,6 +98,7 @@ static void handle_REST_GPIO_SET(HttpRequest *pRequest, HttpResponse *pResponse)
 
 static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_CLEAR");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
 	int gpio;
@@ -105,6 +112,7 @@ static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pRespons
 
 static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_INPUT");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
 	int gpio;
@@ -118,6 +126,7 @@ static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse
 
 static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_OUTPUT");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[5]);
 	int gpio;
@@ -131,6 +140,7 @@ static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpRespons
 
 static void handle_REST_WiFi(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_WIFI");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = WIFI_JSON();
 	pResponse->sendData(obj.toString());
@@ -145,6 +155,7 @@ static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) 
 	int logLevel;
 	stream >> logLevel;
 	::esp_log_level_set("*", (esp_log_level_t)logLevel);
+	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
 	JsonObject obj = SYSTEM_JSON();
 	pResponse->sendData(obj.toString());
@@ -154,6 +165,7 @@ static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) 
 
 static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_GET");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -175,6 +187,7 @@ static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse)
 
 static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_DELETE");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -190,6 +203,7 @@ static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pRespon
 
 static void handle_REST_FILE_POST(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_POST");
+	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::string path = "";
 	for (int i=3; i<parts.size(); i++) {
@@ -297,27 +311,63 @@ class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
 };
 */
 
+static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse) {
+	ESP_LOGD(LOG_TAG, ">> init_I2C");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	#define PIN_SDA 22
+	#define PIN_CLK 21
+
+	i2c_config_t conf;
+	conf.mode = I2C_MODE_MASTER;
+	conf.sda_io_num = (gpio_num_t)PIN_SDA;
+	conf.scl_io_num = (gpio_num_t)PIN_CLK;
+	conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.master.clk_speed = 400000;
+	::i2c_param_config(I2C_NUM_0, &conf);
+	::i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+	ESP_LOGI(LOG_TAG, "<< init_i2c");
+
+	JsonObject obj = I2C_JSON();
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_I2C
+
+static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse) {
+	ESP_LOGD(LOG_TAG, ">> init_I2C");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	JsonObject obj = I2C_SCAN_JSON();
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} // handle_REST_I2C
+
+
 class WebServerTask : public Task {
    void run(void *data) {
   	 /*
   	  * Create a WebServer and register handlers for REST requests.
   	  */
-  	 HttpServer* pWebServer = new HttpServer();
-  	 pWebServer->setRootPath("/spiflash");
-  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
-  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
-  	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
+	  	 HttpServer* pWebServer = new HttpServer();
+	  	 pWebServer->setRootPath("/spiflash");
+	  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
+	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
+	  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
+	  	 //pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C$",                      handle_REST_I2C);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT$",              handle_REST_I2C_INIT);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
+	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
    }

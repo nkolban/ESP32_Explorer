@@ -68,6 +68,7 @@
 			<li><a href="#wifiTab">WiFi</a></li>
 			<li><a href="#gpioTab">GPIO</a></li>
 			<li><a href="#i2sTab">I2S</a></li>
+			<li><a href="#i2cTab">I2C</a></li>
 			<li><a href="#fileSystemTab">File System</a></li>
 		</ul>
 
@@ -255,6 +256,32 @@
 			<button id="gpioRefreshButton">Refresh</button>
 		</div>
 
+		<!-- ------- -->
+		<!-- i2cTab -->
+		<!-- ------- -->
+		<div id="i2cTab">
+			<div id="i2cTabs">
+				<ul>
+					<li><a href="#i2cTabsGeneralTab">General</a></li>
+					<li><a href="#i2cTabsJSONTab">JSON</a></li>
+				</ul>
+				<div id="i2cTabsGeneralTab">
+					<h3>I2C</h3>
+					<table id="i2cTable" class="tableBorders"></table>
+
+				</div>
+				<div id="i2cTabsJSONTab">
+					<div>
+						<div class="flexHoriz">
+							<textarea id="i2cJsonText" style="width: 100%; height: 500px; font-family: monospace;"></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+			<button id="i2cInitButton">Init</button>
+			<button id="i2cScanButton">Scan</button>
+		</div>
+
 		<!-- ------ -->
 		<!-- i2sTab -->
 		<!-- ------ -->
@@ -274,7 +301,7 @@
 			<div class="ui-widget">
 				<span>Root Path:</span> <input id="rootPathText" type="text" value="/spiflash/dir1">
 				<div id="fileTree" style="width: 500px; height: 500px; border: 1px solid; margin-top: 8px;"></div>
-				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/upload">
+				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/FILE">
 					<input type="file" name="myfile"> <input type="submit" name="submit" value="Upload Now">
 				</form>
 			</div>
