@@ -34,7 +34,8 @@ extern JsonObject WIFI_JSON();
 extern JsonObject SYSTEM_JSON();
 extern JsonObject FILESYSTEM_GET_JSON_DIRECTORY(std::string path, bool isRecursive);
 extern JsonObject FILESYSTEM_GET_JSON_CONTENT(std::string path);
-extern JsonObject I2C_JSON();
+extern JsonObject I2C_READ(std::vector<std::string> parts);
+extern JsonObject I2C_WRITE(std::vector<std::string> parts);
 extern JsonObject I2C_SCAN_JSON();
 
 static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
@@ -338,10 +339,10 @@ static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse)
 	::i2c_driver_install((i2c_port_t)I2C_NUM, (i2c_mode_t)I2C_MODE, 0, 0, 0);
 	ESP_LOGI(LOG_TAG, "<< init_i2c");
 
-	JsonObject obj = I2C_JSON();
+	JsonObject obj = I2S_JSON();
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
-} // handle_REST_I2C
+} // handle_REST_I2C_INIT
 
 static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> delete_I2C");
@@ -354,10 +355,10 @@ static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse
 	::i2c_driver_delete((i2c_port_t)I2C_NUM);
 	ESP_LOGI(LOG_TAG, "<< delete_i2c");
 
-	JsonObject obj = I2C_JSON();
+	JsonObject obj = I2S_JSON();
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
-} // handle_REST_I2C
+} // handle_REST_I2C_CLOSE
 
 static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
@@ -366,8 +367,27 @@ static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse)
 	JsonObject obj = I2C_SCAN_JSON();
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
-} // handle_REST_I2C
+} // handle_REST_I2C_SCAN
 
+static void handle_REST_I2C_COMMAND_READ(HttpRequest *pRequest, HttpResponse *pResponse) {
+	ESP_LOGD(LOG_TAG, ">> init_I2C");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	JsonObject obj = I2C_READ(parts);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} //
+
+static void handle_REST_I2C_COMMAND_WRITE(HttpRequest *pRequest, HttpResponse *pResponse) {
+	ESP_LOGD(LOG_TAG, ">> init_I2C");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	std::vector<std::string> parts = pRequest->pathSplit();
+	JsonObject obj = I2C_WRITE(parts);
+	pResponse->sendData(obj.toString());
+	JSON::deleteObject(obj);
+} //
 
 class WebServerTask : public Task {
    void run(void *data) {
@@ -389,10 +409,11 @@ class WebServerTask : public Task {
 	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
 	  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
 	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
-	  	 //pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C$",                      handle_REST_I2C);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT",              handle_REST_I2C_INIT);
+	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_READ);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/COMMAND",            handle_REST_I2C_COMMAND_WRITE);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT",               handle_REST_I2C_INIT);
 	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/DEINIT",              handle_REST_I2C_CLOSE);
+	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/DEINIT",             handle_REST_I2C_CLOSE);
 	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.

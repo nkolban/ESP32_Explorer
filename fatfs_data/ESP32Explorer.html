@@ -275,7 +275,7 @@
 					<h3>Commands</h3>
 					<form style="margin-top: 8px;" action=javascript:void(0);>
 					<fieldset>
-						<legend>Init/close I2C</legend>
+						<legend>Open/close I2C</legend>
 						<div>
 							<label>I2C port</label>
 							<label><input type="radio" name="i2c_port" value="0" checked> i2c 0</label>
@@ -286,19 +286,30 @@
 							<label><input type="radio" name="i2c_mode" value="1" checked> master</label>
 							<label><input type="radio" name="i2c_mode" value="0"> slave</label>
 						</div>
-						<div><label for="i2c_sda">SDA pin</label>
-						<!--  --><input id="i2c_sda"></div>
-						<div><label for="i2c_scl">SCL pin</label>
-						<!--<input type="radio" name="radioIO" id="outputGpioDialog"> -->
-						<input id="i2c_scl"></div>
-						<div><label for="i2c_speed">Speed</label>
-						<input id="i2c_speed"></div>
-						<button id="i2cInitButton2">Init</button>
+						<div><label for="i2c_sda">SDA pin</label><input id="i2c_sda"></div>
+						<div><label for="i2c_scl">SCL pin</label><input id="i2c_scl"></div>
+						<div><label for="i2c_speed">Speed</label><input id="i2c_speed"></div>
+						<button id="i2cInitButton">Open</button>
 						<button id="i2cCloseButton">Close</button>
-						</fieldset>
+					</fieldset>
 					</form>
-					
-				</form>
+
+					<form style="margin-top: 8px;" action=javascript:void(0);>
+					<fieldset>
+						<legend>Send command</legend><!--
+						<div>
+							<label>I2C mode</label>
+							<label><input type="radio" name="i2c_mode" value="1" checked> master</label>
+							<label><input type="radio" name="i2c_mode" value="0"> slave</label>
+						</div>-->
+						<div><label for="i2c_adr">I2c address</label><input id="i2c_adr"></div>
+						<div><label for="i2c_reg">Register</label><input id="i2c_reg"></div>
+						<div><label for="i2c_cnt">Bytes   </label><input id="i2c_cnt"></div>
+						<div><label for="i2c_data">Data    </label><input id="i2c_data"></div>
+						<button id="i2cReadButton">Read i2c register</button>
+						<button id="i2cWriteButton">Write i2c register</button>
+					</fieldset>
+					</form>
 				</div>
 				<div id="i2cTabsJSONTab">
 					<div>

@@ -61,7 +61,7 @@ JsonObject GPIO_JSON() {
 		tmpArr.addObject(tmpObj);
 	}
 	obj.setArray("func_in_sel_cfg", tmpArr);
-
+*/
 	tmpArr = JSON::createArray();
 	for (i=0; i<40; i++) {
 		tmpObj = JSON::createObject();
@@ -71,6 +71,6 @@ JsonObject GPIO_JSON() {
 		tmpObj.setInt("func_sel",        GPIO.func_out_sel_cfg[i].func_sel);
 		tmpArr.addObject(tmpObj);
 	}
-	obj.setArray("func_out_sel_cfg", tmpArr);*/
+	obj.setArray("func_out_sel_cfg", tmpArr);
 	return obj;
 }

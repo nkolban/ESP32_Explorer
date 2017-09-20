@@ -432,18 +432,42 @@ $(function() {
 		});
 	});
 
-	$("#i2cInitButton2").button().click(function() {
+	$("#i2cReadButton").button().click(function() {
+		var address = $("#i2c_adr").val();
+		var reg = $("#i2c_reg").val();
+		var count = $("#i2c_cnt").val();
+		var data = $("#i2c_data").val();
+		var sda = $("#i2c_sda").val();
+		var scl = $("#i2c_scl").val();
+		getData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
+			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
+		});
+	});
+
+	$("#i2cWriteButton").button().click(function() {
+		var address = $("#i2c_adr").val();
+		var reg = $("#i2c_reg").val();
+		var count = $("#i2c_cnt").val();
+		var data = $("#i2c_data").val();
+		var sda = $("#i2c_sda").val();
+		var scl = $("#i2c_scl").val();
+		postData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
+			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
+		});
+	});
+
+	$("#i2cCloseButton").button().click(function() {
+		var port = $('input[name=i2c_port]:checked').val();
+		postData("/ESP32/I2C/DEINIT/" + port);
+	});
+
+	$("#i2cInitButton").button().click(function() {
 		var port = $('input[name=i2c_port]:checked').val();
 		var sda = $("#i2c_sda").val();
 		var scl = $("#i2c_scl").val();
 		var speed = $("#i2c_speed").val();
 		var mode = $('input[name=i2c_mode]:checked').val();
 		postData("/ESP32/I2C/INIT/" + port + "/" + sda + "/" + scl + "/" + speed + "/" + mode);
-	});
-
-	$("#i2cCloseButton").button().click(function() {
-		var port = $('input[name=i2c_port]:checked').val();
-		postData("/ESP32/I2C/DEINIT/" + port);
 	});
 
 	var table = $("#i2cTable");
