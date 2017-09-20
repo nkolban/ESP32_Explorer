@@ -48,7 +48,6 @@ class WiFiTask: public Task {
 		ESP32_ExplorerWiFiEventHandler* eventHandler = new ESP32_ExplorerWiFiEventHandler();
 		wifi.setWifiEventHandler(eventHandler);
 		wifi.setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
-		//wifi.connectAP("Orange-8F54", "33413006");
 		wifi.connectAP("DESKTOP", "12345678");
 	} // End run
 }; // WiFiTask
