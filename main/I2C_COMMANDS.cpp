@@ -16,7 +16,7 @@ extern "C" {
 JsonObject I2C_READ(std::vector<std::string> parts) {
 	uint8_t SDA, SCL, ADDR, bytes, REG;
 	std::string hex_byte;
-	uint8_t dat[1];
+	//uint8_t dat[1];
 	//stream >> SDA;
 	//std::stringstream stream1(parts[5]);
 	//stream1 >> SCL;
@@ -54,13 +54,13 @@ JsonObject I2C_READ(std::vector<std::string> parts) {
 }
 
 JsonObject I2C_WRITE(std::vector<std::string> parts) {
-	uint8_t SDA, SCL, ADDR, bytes, REG;
+	uint8_t SDA, SCL, ADDR, REG;
 	std::string hex_byte;
 	uint8_t dat[1];
 	//stream >> SDA;
 	//std::stringstream stream1(parts[5]);
 	//stream1 >> SCL;
-	bytes = atoi(parts[6].c_str());
+	//bytes = atoi(parts[6].c_str());
 	SDA = atoi(parts[8].c_str());
 	SCL = atoi(parts[9].c_str());
 	ADDR = atoi(parts[4].c_str());

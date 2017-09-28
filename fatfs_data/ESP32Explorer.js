@@ -165,6 +165,7 @@ $(function() {
 	$("#gpioTabs").tabs();
 	$("#wifiTabs").tabs();
 	$("#i2cTabs").tabs();
+	$("#bleTabs").tabs();
 	$("#systemLoggingTab [name='systemLogging']").checkboxradio().on("change", function(event) {
 		postData("/ESP32/LOG/SET/" + $(event.target).attr("data-logLevel"));
 	});
@@ -285,6 +286,12 @@ $(function() {
 			$("#staIpWifi").text(data.staIpInfo.ip);
 			$("#staGwWifi").text(data.staIpInfo.gw);
 			$("#staNetmaskWifi").text(data.staIpInfo.netmask);			
+		})
+	});
+	
+	$("#bleScanButton").button().click(function(){
+		postData("/ESP32/BLE/CLIENT/SCAN", function(data) {
+			
 		})
 	});
 

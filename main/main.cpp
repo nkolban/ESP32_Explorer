@@ -12,8 +12,10 @@
 #include <string>
 #include "ESP32Explorer.h"
 
+static const char *WIFI_SSID     = "sweetie";
+static const char *WIFI_PASSWORD = "l16wint!";
 
-static const char* LOG_TAG = "ESP32_Explorer_MAIN";
+static const char* LOG_TAG = "ESP32_Explorer_MAIN";   // Logging tag
 
 class ESP32_ExplorerTask: public Task {
 	void run(void* data) override {
@@ -44,11 +46,11 @@ class ESP32_ExplorerWiFiEventHandler: public WiFiEventHandler {
 class WiFiTask: public Task {
 	void run(void *data) override {
 
-		WiFi wifi;
+		WiFi *pWifi = new WiFi();  // Can't delete at the end of the task.
 		ESP32_ExplorerWiFiEventHandler* eventHandler = new ESP32_ExplorerWiFiEventHandler();
-		wifi.setWifiEventHandler(eventHandler);
-		wifi.setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
-		wifi.connectAP("DESKTOP", "12345678");
+		pWifi->setWifiEventHandler(eventHandler);
+		pWifi->setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
+		pWifi->connectAP(WIFI_SSID, WIFI_PASSWORD);
 	} // End run
 }; // WiFiTask
 

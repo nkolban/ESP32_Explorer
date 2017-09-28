@@ -28,6 +28,8 @@
 
 static const char* LOG_TAG = "ESP32Explorer";
 
+static BLEExplorer* g_pBLEExplorer;
+
 extern JsonObject I2S_JSON();
 extern JsonObject GPIO_JSON();
 extern JsonObject WIFI_JSON();
@@ -52,8 +54,13 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	pResponse->sendData("hello!");
 } // handleTest
 
+static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
+	g_pBLEExplorer->scan();
+} // handle_REST_BLE_CLIENT_SCAN
 
-static void handle_REST_SYSTEM(HttpRequest *pRequest, HttpResponse *pResponse) {
+
+static void handle_REST_SYSTEM(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -394,26 +401,27 @@ class WebServerTask : public Task {
   	 /*
   	  * Create a WebServer and register handlers for REST requests.
   	  */
-	  	 HttpServer* pWebServer = new HttpServer();
-	  	 pWebServer->setRootPath("/spiflash");
-	  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
-	  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
-	  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_READ);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/COMMAND",            handle_REST_I2C_COMMAND_WRITE);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/INIT",               handle_REST_I2C_INIT);
-	  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
-	  	 pWebServer->addPathHandler("POST",    "^\\/ESP32\\/I2C\\/DEINIT",             handle_REST_I2C_CLOSE);
+  	 HttpServer* pWebServer = new HttpServer();
+  	 pWebServer->setRootPath("/spiflash");
+  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
+  	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_READ);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_WRITE);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/INIT",                handle_REST_I2C_INIT);
+  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/DEINIT",              handle_REST_I2C_CLOSE);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/BLE\\/CLIENT\\/SCAN",       handle_REST_BLE_CLIENT_SCAN);
 	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
@@ -429,7 +437,10 @@ class TFTPTask : public Task {
 };
 
 ESP32_Explorer::ESP32_Explorer() {
-}
+	//m_pBLEExplorer = new BLEExplorer();
+	g_pBLEExplorer = new BLEExplorer();
+} // ESP32_Explorer
+
 
 ESP32_Explorer::~ESP32_Explorer() {
 }
