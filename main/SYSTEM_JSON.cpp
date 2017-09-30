@@ -110,7 +110,7 @@ JsonObject SYSTEM_JSON() {
 	int taskCount = uxTaskGetNumberOfTasks();
 	obj.setInt("taskCount", taskCount);
 
-//#if( configUSE_TRACE_FACILITY == 1 )
+#if( configUSE_TRACE_FACILITY == 1 )
 	TaskStatus_t *pTaskStatusArray = (TaskStatus_t *)malloc(sizeof(TaskStatus_t) * taskCount);
 	assert(pTaskStatusArray != nullptr);
 	taskCount = ::uxTaskGetSystemState(pTaskStatusArray, taskCount, nullptr);
@@ -127,7 +127,7 @@ JsonObject SYSTEM_JSON() {
 	}
 	obj.setArray("taskStatus", arr2);
 	free(pTaskStatusArray);
-//#endif
+#endif
 
 
 	// Get a list of all partitions ...
