@@ -1,3 +1,4 @@
+
 #include <stdlib.h>
 #include <JSON.h>
 #include <WiFi.h>
@@ -8,35 +9,88 @@
 #include <sys/time.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <esp_log.h>
 
-/*
+const static char* LOG_TAG = "SYSTEM_JSON";
+/**
+ * @brief Obtain a JSON object describing a partition.
+ *
  * {
- *    model:      <number>
- *    cores:      <number>
- *    revision:   <number>
- *    hasEmbeddedFlash: <boolean>
- *    hasWifi:    <boolean>
- *    hasBLE:     <boolean>
- *    hasBT:      <boolean>
- *    espVersion: <string>
- *    freeHeap:   <number>
- *    time:       <number>
- *    taskCount:  <number>
- *    partitions: []
+ *   "type":
+ *   "subType":
+ *   "size":
+ *   "address":
+ *   "encrypted":
+ *   "label":
  * }
  */
 static JsonObject fromPartition(esp_partition_t *pPartition) {
 	JsonObject obj = JSON::createObject();
-	obj.setInt("type",    pPartition->type);
-	obj.setInt("subType", pPartition->subtype);
-	obj.setInt("size",    pPartition->size);
-	obj.setInt("address", pPartition->address);
-	obj.setBoolean("encrypted", pPartition->encrypted);
-	obj.setString("label", std::string(pPartition->label));
+	obj.setInt("type",          pPartition->type);                // type
+	obj.setInt("subType",       pPartition->subtype);             // subType
+	obj.setInt("size",          pPartition->size);                // size
+	obj.setInt("address",       pPartition->address);             // address
+	obj.setBoolean("encrypted", pPartition->encrypted);           // encrypted
+	obj.setString("label",      std::string(pPartition->label));  // label
 	return obj;
 } // fromPartition
 
 
+/**
+ * @brief Create a JSON object from a TaskStatus_t.
+ *
+ * {
+ *    "name":
+ *    "stackHighWater":
+ *    "priority":
+ *    "taskNumber":
+ * }
+ * @param [in] pTaskStatus The task status to turn into a JSON object.
+ * @return A JSON object from a TaskStatus_t.
+ */
+static JsonObject fromTaskStatus(TaskStatus_t *pTaskStatus) {
+	JsonObject obj = JSON::createObject();
+	obj.setString("name",        pTaskStatus->pcTaskName);             // name
+	obj.setInt("stackHighWater", pTaskStatus->usStackHighWaterMark);   // stackHighWater
+	obj.setInt("priority",       pTaskStatus->uxCurrentPriority);      // priority
+	obj.setInt("taskNumber",     pTaskStatus->xTaskNumber);            // taskNumber
+	return obj;
+} // fromTaskStatus
+
+
+/**
+ * @brief Create the JSON object to return to the caller that provides us information
+ * about the system as a whole.
+ *
+ * The returned object contains:
+ * {
+ *   "model":          // ESP32 model number
+ *   "cores":          // Number of ESP32 cores
+ *   "revision":       // ESP32 revision
+ *   "hasEmbeddedFlash":
+ *   "hasWiFi":        // Is WiFi present?
+ *   "hasBLE":         // Is BLE present?
+ *   "hasBT":          // Is BT classic present?
+ *   "espVersion":     // Version of ESP-IDF
+ *   "freeHeap":       // Amount of heap free
+ *   "time":           // Time since boot
+ *   "taskCount":      // Number of FreeRTOS tasks
+ *   "partitions":     // Partitions structure
+ *   [
+ *     {
+ *       "type":
+ *       "subType":
+ *       "size":
+ *       "address":
+ *       "encrypted":
+ *       "label":
+ *     },
+ *     ...
+ *   ]
+ * }
+ *
+ * @return A JSON Object describing the data.
+ */
 JsonObject SYSTEM_JSON() {
 	JsonObject obj = JSON::createObject();
 	esp_chip_info_t chipInfo;
@@ -56,23 +110,40 @@ JsonObject SYSTEM_JSON() {
 	int taskCount = uxTaskGetNumberOfTasks();
 	obj.setInt("taskCount", taskCount);
 
-	/*
+//#if( configUSE_TRACE_FACILITY == 1 )
 	TaskStatus_t *pTaskStatusArray = (TaskStatus_t *)malloc(sizeof(TaskStatus_t) * taskCount);
-	taskCount = uxTaskGetSystemState(pTaskStatusArray, taskCount, nullptr);
+	assert(pTaskStatusArray != nullptr);
+	taskCount = ::uxTaskGetSystemState(pTaskStatusArray, taskCount, nullptr);
+
+	JsonArray arr2 = JSON::createArray();
+	for (int i=0; i<taskCount; i++) {
+		ESP_LOGD(LOG_TAG, "Task name: %s, stack high water: %d, runtime counter: %d, current priority: %d, task number: %d", pTaskStatusArray[i].pcTaskName,
+			pTaskStatusArray[i].usStackHighWaterMark,
+			pTaskStatusArray[i].ulRunTimeCounter,
+			pTaskStatusArray[i].uxCurrentPriority,
+			pTaskStatusArray[i].xTaskNumber
+		);
+		arr2.addObject(fromTaskStatus(&pTaskStatusArray[i]));
+	}
+	obj.setArray("taskStatus", arr2);
 	free(pTaskStatusArray);
-	*/
+//#endif
+
 
 	// Get a list of all partitions ...
 	JsonArray arr = JSON::createArray();
-	esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+
+	// Find all the app partitions.
+	esp_partition_iterator_t it = ::esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
 	esp_partition_t *pPartition;
 	while(it != NULL) {
-		pPartition = (esp_partition_t *)esp_partition_get(it);
+		pPartition = (esp_partition_t *)::esp_partition_get(it);
 		arr.addObject(fromPartition(pPartition));
 		it = esp_partition_next(it);
 	}
 	esp_partition_iterator_release(it);
 
+	// Find all the data partitions ...
 	it = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, NULL);
 	while(it != NULL) {
 		pPartition = (esp_partition_t *)esp_partition_get(it);
@@ -80,6 +151,7 @@ JsonObject SYSTEM_JSON() {
 		it = esp_partition_next(it);
 	}
 	esp_partition_iterator_release(it);
+
 	obj.setArray("partitions", arr);
 	return obj;
 } // SYSTEM_JSON

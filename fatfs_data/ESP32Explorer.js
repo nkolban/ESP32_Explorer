@@ -248,6 +248,7 @@ $(function() {
 				$("#timeSystemGeneralTab").text(data.time);	
 				$("#taskCountFreeRTOSTab").text(data.taskCount);
 				
+				// Load the partition table information.
 				var table = $("#partitionTable");
 				table.find("> tr").remove();
 				// debugger;
@@ -268,6 +269,23 @@ $(function() {
 					row.append("<td>" + data.partitions[i].label + "</td>");
 					table.append(row);
 				}
+				// End load the partition table information
+				
+				// Load the task status information
+				var table = $("#taskStatusTable");
+				table.find("> tr").remove();
+				// debugger;
+				if (data.taskStatus != null) {
+					for (var i=0; i<data.taskStatus.length; i++) {
+						var row = $("<tr>");
+						row.append("<td>" + data.taskStatus[i].name + "</td>");
+						row.append("<td>" + data.taskStatus[i].taskNumber + "</td>");
+						row.append("<td>" + data.taskStatus[i].priority + "</td>");
+						row.append("<td>" + data.taskStatus[i].stackHighWater + "</td>");
+						table.append(row);
+					}
+				}
+				// End load the task status information
 			}); // getData
 		}
 	);
