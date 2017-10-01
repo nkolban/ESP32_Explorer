@@ -257,15 +257,11 @@ $(function() {
 				});
 				for (var i = 0; i < data.partitions.length; i++) {
 					var row = $("<tr>");
-					row.append("<td>" + typeToString(data.partitions[i].type)
-							+ "</td>");
+					row.append("<td>" + typeToString(data.partitions[i].type) + "</td>");
 					row.append("<td>" + subTypeToString(data.partitions[i].subType) + "</td>");
 					row.append("<td>" + data.partitions[i].size + "</td>");
-					row.append("<td>0x" + data.partitions[i].address.toString(16)
-							+ "</td>");
-					row.append("<td>"
-							+ (data.partitions[i].encrypted ? "Yes" : "No")
-							+ "</td>");
+					row.append("<td>0x" + data.partitions[i].address.toString(16) + "</td>");
+					row.append("<td>"	+ (data.partitions[i].encrypted ? "Yes" : "No")	+ "</td>");
 					row.append("<td>" + data.partitions[i].label + "</td>");
 					table.append(row);
 				}
@@ -276,15 +272,16 @@ $(function() {
 				table.find("> tr").remove();
 				// debugger;
 				if (data.taskStatus != null) {
-					for (var i=0; i<data.taskStatus.length; i++) {
+					for (var i = 0; i < data.taskStatus.length; i++) {
 						var row = $("<tr>");
 						row.append("<td>" + data.taskStatus[i].name + "</td>");
 						row.append("<td>" + data.taskStatus[i].taskNumber + "</td>");
 						row.append("<td>" + data.taskStatus[i].priority + "</td>");
 						row.append("<td>" + data.taskStatus[i].stackHighWater + "</td>");
+						row.append("<td>" + data.taskStatus[i].state + "</td>");
 						table.append(row);
-					}
-				}
+					}   // End process each task in the task status data.
+				}      // Status data for tasks was present.
 				// End load the task status information
 			}); // getData
 		}
@@ -450,20 +447,24 @@ $(function() {
 			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
 			// Loop through each of the I2C address.
 			for (var i=3; i<123; i++) {
-				$("#i2c" + i + "Checkbox" ).attr("checked", data.present[i-3]);
-				$("#i2c" + i + "Icon").toggleClass("outputImage", data.present[i-3]);
-				$("#i2c" + i + "Icon").toggleClass("", !data.present[i-3]);
+				if (data.present[i-3]) {
+					$("#i2c" + i + "Icon").addClass("checkImage");
+					$("#i2c" + i + "Icon").removeClass("crossImage");
+				} else {
+					$("#i2c" + i + "Icon").removeClass("checkImage");
+					$("#i2c" + i + "Icon").addClass("crossImage");
+				}
 			}
 		});
 	});
 
 	$("#i2cReadButton").button().click(function() {
 		var address = $("#i2c_adr").val();
-		var reg = $("#i2c_reg").val();
-		var count = $("#i2c_cnt").val();
-		var data = $("#i2c_data").val();
-		var sda = $("#i2c_sda").val();
-		var scl = $("#i2c_scl").val();
+		var reg     = $("#i2c_reg").val();
+		var count   = $("#i2c_cnt").val();
+		var data    = $("#i2c_data").val();
+		var sda     = $("#i2c_sda").val();
+		var scl     = $("#i2c_scl").val();
 		getData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
 			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
 		});
@@ -471,11 +472,11 @@ $(function() {
 
 	$("#i2cWriteButton").button().click(function() {
 		var address = $("#i2c_adr").val();
-		var reg = $("#i2c_reg").val();
-		var count = $("#i2c_cnt").val();
-		var data = $("#i2c_data").val();
-		var sda = $("#i2c_sda").val();
-		var scl = $("#i2c_scl").val();
+		var reg     = $("#i2c_reg").val();
+		var count   = $("#i2c_cnt").val();
+		var data    = $("#i2c_data").val();
+		var sda     = $("#i2c_sda").val();
+		var scl     = $("#i2c_scl").val();
 		postData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
 			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
 		});
@@ -487,49 +488,43 @@ $(function() {
 	});
 
 	$("#i2cInitButton").button().click(function() {
-		var port = $('input[name=i2c_port]:checked').val();
-		var sda = $("#i2c_sda").val();
-		var scl = $("#i2c_scl").val();
+		var port  = $('input[name=i2c_port]:checked').val();
+		var sda   = $("#i2c_sda").val();
+		var scl   = $("#i2c_scl").val();
 		var speed = $("#i2c_speed").val();
-		var mode = $('input[name=i2c_mode]:checked').val();
+		var mode  = $('input[name=i2c_mode]:checked').val();
 		postData("/ESP32/I2C/INIT/" + port + "/" + sda + "/" + scl + "/" + speed + "/" + mode);
 	});
 
-	var table = $("#i2cTable");
-	for (var j=0; j<8; j++) {
+	
+	// Build the I2C scan table
+	var table = $("#i2cScanTable");
+	for (var j=0; j<8; j++) { // For each row.
 		var tr = $("<tr>");
-		for (var i=0; i<16; i++) {
+		for (var i=0; i<16; i++) { // For each column
 			var i2cNum = j*16 + i;
-			if(i2cNum < 120){
-				var td = $("<td>");
-				var div;
-				var wDiv;
+			if (i2cNum < 3) {   // The cells for addresses 0, 1 and 2 should be empty.
+				tr.append($("<td>"));
+			} else {
+				if(i2cNum < 120){
+					var td = $("<td>");
+					var div;
+					var wDiv;
 					wDiv = $("<div class='flexHorizCenter'>");
 					div = $("<div>");
 					div.attr("id", "i2c" + i2cNum + "Icon");
 					wDiv.append(div);
-				
-				div = $("<div class='flexHorizCenter' style='margin-left: 4px; font-size: x-large;'>");
-				div.text("" + i2cNum);
-				wDiv.append(div);
-				
-				td.append(wDiv);
-				
-				wDiv = $("<div class='flexHorizCenter'>");
-				if(i2cNum > 2){
-					var checkBox = $("<input type='checkbox'>");
-					checkBox.attr("data-i2c", i2cNum );
 					
-					checkBox.attr("id", "i2c" + i2cNum + "Checkbox");
-					checkBox.attr("disabled", true);
-					wDiv.append(checkBox);
+					div = $("<div class='flexHorizCenter' style='margin-left: 4px; font-size: x-large;'>");
+					div.text("" + i2cNum);
+					wDiv.append(div);
+					
+					td.append(wDiv);
+					tr.append(td);
 				}
-				td.append(wDiv);
-	
-				tr.append(td);
-			}
-		}
+			} // Cell > 2.
+		} // End for each column.
 		table.append(tr);
-	} // End of loop for I2C address.
+	} // End for each row.
 
 });

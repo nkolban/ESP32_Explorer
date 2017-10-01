@@ -44,6 +44,7 @@ static JsonObject fromPartition(esp_partition_t *pPartition) {
  *    "stackHighWater":
  *    "priority":
  *    "taskNumber":
+ *    "state":
  * }
  * @param [in] pTaskStatus The task status to turn into a JSON object.
  * @return A JSON object from a TaskStatus_t.
@@ -54,6 +55,30 @@ static JsonObject fromTaskStatus(TaskStatus_t *pTaskStatus) {
 	obj.setInt("stackHighWater", pTaskStatus->usStackHighWaterMark);   // stackHighWater
 	obj.setInt("priority",       pTaskStatus->uxCurrentPriority);      // priority
 	obj.setInt("taskNumber",     pTaskStatus->xTaskNumber);            // taskNumber
+	char *state = "";
+	switch(pTaskStatus->eCurrentState) {
+		case eReady: {
+			state = "Ready";
+			break;
+		}
+		case eRunning: {
+			state = "Running";
+			break;
+		}
+		case eBlocked: {
+			state = "Blocked";
+			break;
+		}
+		case eSuspended: {
+			state = "Suspended";
+			break;
+		}
+		case eDeleted: {
+			state = "Deleted";
+			break;
+		}
+	}
+	obj.setString("state", state);             // state
 	return obj;
 } // fromTaskStatus
 
@@ -84,6 +109,16 @@ static JsonObject fromTaskStatus(TaskStatus_t *pTaskStatus) {
  *       "address":
  *       "encrypted":
  *       "label":
+ *     },
+ *     ...
+ *   ]
+ *   "taskStatus": [
+ *     {
+ *       "name":
+ *       "stackHighWater":
+ *       "priority":
+ *       "taskNumber":
+ *       "state":
  *     },
  *     ...
  *   ]

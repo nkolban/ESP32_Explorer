@@ -58,6 +58,22 @@
 	margin: 0;
 	padding: 0;
 }
+
+.checkImage {
+	width: 24px;
+	height: 24px;
+	background-image: url('images/check.png');
+	margin: 0;
+	padding: 0;
+}
+
+.crossImage {
+	width: 24px;
+	height: 24px;
+	background-image: url('images/cross.png');
+	margin: 0;
+	padding: 0;
+}
 </style>
 </head>
 <body>
@@ -112,6 +128,7 @@
 									<th>Task Number</th>
 									<th>Priority</th>
 									<th>Stack High</th>
+									<th>State</th>
 								</tr>
 							</thead>
 						</table>
@@ -168,9 +185,9 @@
 				</div>
 			</div>
 
-			<div>
+			<p>
 				<button id="systemRefreshButton">Refresh</button>
-			</div>
+			</p>
 		</div>
 
 		<!-- ------- -->
@@ -238,9 +255,9 @@
 				</div>
 			</div>
 			<!-- End of wifiTabs -->
-			<div>
+			<p>
 				<button id="wifiRefreshButton">Refresh</button>
-			</div>
+			</p>
 		</div>
 		<!-- End of wifiTab -->
 
@@ -266,12 +283,14 @@
 					</div>
 				</div>
 			</div>
+			<p>
 			<button id="gpioRefreshButton">Refresh</button>
+			</p>
 		</div>
 
-		<!-- ------- -->
+		<!-- ------ -->
 		<!-- i2cTab -->
-		<!-- ------- -->
+		<!-- ------ -->
 		<div id="i2cTab">
 			<div id="i2cTabs">
 				<ul>
@@ -281,8 +300,10 @@
 				</ul>
 				<div id="i2cTabsGeneralTab">
 					<h3>I2C</h3>
-					<table id="i2cTable" class="tableBorders"></table>
-
+					<table id="i2cScanTable" class="tableBorders"></table>
+					<p>
+						<button id="i2cScanButton">Scan</button>
+					</p>
 				</div>
 				<div id="i2cTabsInitTab">
 					<h3>Commands</h3>
@@ -332,7 +353,7 @@
 					</div>
 				</div>
 			</div>
-			<button id="i2cScanButton">Scan</button>
+
 		</div>
 
 		<!-- ------ -->
@@ -376,9 +397,11 @@
 			<div class="ui-widget">
 				<span>Root Path:</span> <input id="rootPathText" type="text" value="/spiflash/dir1">
 				<div id="fileTree" style="width: 500px; height: 500px; border: 1px solid; margin-top: 8px;"></div>
+				<p>
 				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/FILE">
 					<input type="file" name="myfile"> <input type="submit" name="submit" value="Upload Now">
 				</form>
+				</p>
 			</div>
 			<div style="margin-top: 8px;">
 				<button id="fileSystemRefreshButton">Refresh</button>
