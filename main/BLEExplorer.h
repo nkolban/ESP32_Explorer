@@ -7,12 +7,12 @@
 
 #ifndef MAIN_BLEEXPLORER_H_
 #define MAIN_BLEEXPLORER_H_
-
+#include <freertos/FreeRTOS.h>
 class BLEExplorer {
 public:
 	BLEExplorer();
 	virtual ~BLEExplorer();
-	void scan();
+	uint8_t scan();
 };
 
 #endif /* MAIN_BLEEXPLORER_H_ */

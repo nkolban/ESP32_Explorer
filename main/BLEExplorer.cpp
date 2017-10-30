@@ -23,14 +23,14 @@ BLEExplorer::~BLEExplorer() {
 /**
  * @brief Perform a BLE Scan and return the results.
  */
-void BLEExplorer::scan() {
-	/*
+uint8_t BLEExplorer::scan() {
+
 	ESP_LOGD(LOG_TAG, ">> scan");
 	BLEDevice::init("");
 	BLEScan* pBLEScan = BLEDevice::getScan();
 	//pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
 	pBLEScan->setActiveScan(true);
-	BLEScanResults scanResults = pBLEScan->start(30);
+	BLEScanResults scanResults = pBLEScan->start(5);
 	ESP_LOGD(LOG_TAG, "<< scan");
-	*/
+	return scanResults.getCount();
 } // scan

@@ -56,7 +56,12 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
-	g_pBLEExplorer->scan();
+	uint8_t result = g_pBLEExplorer->scan();
+	pResponse->addHeader("access-control-allow-origin", "*");
+	//pResponse->addHeader("Content-Type", "application/json");
+	char resp[20];
+	sprintf(resp, "found %d devices", result);
+	pResponse->sendData(resp);
 } // handle_REST_BLE_CLIENT_SCAN
 
 
@@ -403,7 +408,7 @@ class WebServerTask : public Task {
   	  */
   	 HttpServer* pWebServer = new HttpServer();
   	 pWebServer->setRootPath("/spiflash");
-  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
+//  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
@@ -425,6 +430,7 @@ class WebServerTask : public Task {
 	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
+   	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
    }
 };
 
@@ -451,13 +457,15 @@ void ESP32_Explorer::start() {
 	//FileSystem::mkdir("/spiflash/mydir2");
 	//FileSystem::mkdir("/spiflash/mydir2/fred");
 	//FileSystem::dumpDirectory("/spiflash/");
+  	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 
 	WebServerTask* webServerTask = new WebServerTask();
-	webServerTask->setStackSize(40000);
+	webServerTask->setStackSize(20000);
 	webServerTask->start();
+  	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 
-	TFTPTask* pTFTPTask = new TFTPTask();
-	pTFTPTask->setStackSize(8000);
+	//TFTPTask* pTFTPTask = new TFTPTask();
+	//pTFTPTask->setStackSize(8000);
 	//pTFTPTask->start();
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_25);
 	ESP32CPP::GPIO::setOutput(GPIO_NUM_26);
