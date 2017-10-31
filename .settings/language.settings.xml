@@ -9,6 +9,7 @@
 				<language-scope id="org.eclipse.cdt.core.gcc"/>
 				<language-scope id="org.eclipse.cdt.core.g++"/>
 			</provider>
+			<provider-reference id="org.eclipse.cdt.managedbuilder.core.GCCBuildCommandParser" ref="shared-provider"/>
 		</extension>
 	</configuration>
 </project>
