@@ -306,7 +306,7 @@ $(function() {
 	
 	$("#bleScanButton").button().click(function(){
 		postData("/ESP32/BLE/CLIENT/SCAN", function(data) {
-			
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
 		})
 	});
 

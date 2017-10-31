@@ -25,7 +25,9 @@
 #include <GeneralUtils.h>
 
 #include <esp_wifi.h>
-
+extern "C"{
+#include "esp_heap_trace.h"
+}
 static const char* LOG_TAG = "ESP32Explorer";
 
 //static BLEExplorer* g_pBLEExplorer;
@@ -56,6 +58,7 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 <<<<<<< HEAD
 	uint8_t result = g_pBLEExplorer->scan();
@@ -70,6 +73,30 @@ static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pRe
 =======
 	//g_pBLEExplorer->scan();
 >>>>>>> upstream/master
+=======
+	JsonArray obj = g_pBLEExplorer->scan();
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
+	JSON::deleteArray(obj);
+   	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
+} // handle_REST_BLE_CLIENT_SCAN
+
+static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_CONNECT");
+	std::map<std::string, std::string> m = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		ESP_LOGD(LOG_TAG, "Method: %s", m.at("connect").c_str());
+		if(m.count("connect") > 0)
+			ESP_LOGD(LOG_TAG, "Query: %s", m.at("connect").c_str());
+	}
+	JsonArray obj = g_pBLEExplorer->connect(m.at("connect").c_str());
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
+	JSON::deleteArray(obj);
+   	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
+>>>>>>> Stashed changes
 } // handle_REST_BLE_CLIENT_SCAN
 
 
@@ -419,24 +446,27 @@ class WebServerTask : public Task {
   	 HttpServer* pWebServer = new HttpServer();
   	 pWebServer->setRootPath("/spiflash");
 //  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
+//     ESP_ERROR_CHECK( heap_trace_start(HEAP_TRACE_LEAKS) );
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/WIFI$",                     handle_REST_WiFi);
+//     ESP_ERROR_CHECK( heap_trace_start(HEAP_TRACE_LEAKS) );
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2S$",                      handle_REST_I2S);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/GPIO$",                     handle_REST_GPIO);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/SET",                handle_REST_GPIO_SET);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/CLEAR",              handle_REST_GPIO_CLEAR);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
+/*  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/GPIO\\/DIRECTION\\/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/LOG\\/SET",                 handle_REST_LOG_SET);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
+ */ /*	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/FILE",                      handle_REST_FILE_GET);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/FILE",                      handle_REST_FILE_POST);
   	 pWebServer->addPathHandler("DELETE", "^\\/ESP32\\/FILE",                      handle_REST_FILE_DELETE);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
-  	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_READ);
+  	*/ pWebServer->addPathHandler("GET",    "^\\/ESP32\\/SYSTEM$",                   handle_REST_SYSTEM);
+  /*	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_READ);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/COMMAND",             handle_REST_I2C_COMMAND_WRITE);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/INIT",                handle_REST_I2C_INIT);
   	 pWebServer->addPathHandler("GET",    "^\\/ESP32\\/I2C\\/SCAN$",               handle_REST_I2C_SCAN);
   	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/I2C\\/DEINIT",              handle_REST_I2C_CLOSE);
-  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/BLE\\/CLIENT\\/SCAN",       handle_REST_BLE_CLIENT_SCAN);
+  	*/ pWebServer->addPathHandler("POST",   "^\\/ESP32\\/BLE\\/CLIENT\\/SCAN",       handle_REST_BLE_CLIENT_SCAN);
+  	 pWebServer->addPathHandler("POST",   "^\\/ESP32\\/BLE\\/CLIENT\\/CONNECT",       handle_REST_BLE_CLIENT_CONNECT);
 	   	 //pWebServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
@@ -501,7 +531,7 @@ void ESP32_Explorer::start() {
   	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 
 	WebServerTask* webServerTask = new WebServerTask();
-	webServerTask->setStackSize(20000);
+	webServerTask->setStackSize(22000);
 	webServerTask->start();
   	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 
