@@ -57,12 +57,16 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
 <<<<<<< HEAD
+<<<<<<< HEAD
 	uint8_t result = g_pBLEExplorer->scan();
 	pResponse->addHeader("access-control-allow-origin", "*");
 	//pResponse->addHeader("Content-Type", "application/json");
 	char resp[20];
 	sprintf(resp, "found %d devices", result);
 	pResponse->sendData(resp);
+=======
+	//g_pBLEExplorer->scan();
+>>>>>>> upstream/master
 =======
 	//g_pBLEExplorer->scan();
 >>>>>>> upstream/master
@@ -411,6 +415,7 @@ class WebServerTask : public Task {
   	  * Create a WebServer and register handlers for REST requests.
   	  */
 <<<<<<< HEAD
+<<<<<<< HEAD
   	 HttpServer* pWebServer = new HttpServer();
   	 pWebServer->setRootPath("/spiflash");
 //  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
@@ -437,6 +442,8 @@ class WebServerTask : public Task {
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
    	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
 =======
+=======
+>>>>>>> upstream/master
   	 HttpServer* pHttpServer = new HttpServer();
   	 pHttpServer->setRootPath("/spiflash");
   	 pHttpServer->addPathHandler("GET",    "\\/hello\\/.*",                handleTest);
@@ -461,6 +468,9 @@ class WebServerTask : public Task {
 	   	 //pHttpServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pHttpServer->start(80); // Start the WebServer listening on port 80.
+<<<<<<< HEAD
+>>>>>>> upstream/master
+=======
 >>>>>>> upstream/master
    }
 };
