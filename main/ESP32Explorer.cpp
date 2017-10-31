@@ -28,7 +28,7 @@
 
 static const char* LOG_TAG = "ESP32Explorer";
 
-static BLEExplorer* g_pBLEExplorer;
+//static BLEExplorer* g_pBLEExplorer;
 
 extern JsonObject I2S_JSON();
 extern JsonObject GPIO_JSON();
@@ -56,12 +56,16 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
+<<<<<<< HEAD
 	uint8_t result = g_pBLEExplorer->scan();
 	pResponse->addHeader("access-control-allow-origin", "*");
 	//pResponse->addHeader("Content-Type", "application/json");
 	char resp[20];
 	sprintf(resp, "found %d devices", result);
 	pResponse->sendData(resp);
+=======
+	//g_pBLEExplorer->scan();
+>>>>>>> upstream/master
 } // handle_REST_BLE_CLIENT_SCAN
 
 
@@ -406,6 +410,7 @@ class WebServerTask : public Task {
   	 /*
   	  * Create a WebServer and register handlers for REST requests.
   	  */
+<<<<<<< HEAD
   	 HttpServer* pWebServer = new HttpServer();
   	 pWebServer->setRootPath("/spiflash");
 //  	 pWebServer->addPathHandler("GET",    "\\/hello\\/.*",                         handleTest);
@@ -431,6 +436,32 @@ class WebServerTask : public Task {
   	 //pWebServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pWebServer->start(80); // Start the WebServer listening on port 80.
    	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
+=======
+  	 HttpServer* pHttpServer = new HttpServer();
+  	 pHttpServer->setRootPath("/spiflash");
+  	 pHttpServer->addPathHandler("GET",    "\\/hello\\/.*",                handleTest);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/WIFI",                  handle_REST_WiFi);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/I2S",                   handle_REST_I2S);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/GPIO",                  handle_REST_GPIO);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/GPIO/SET",              handle_REST_GPIO_SET);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/GPIO/CLEAR",            handle_REST_GPIO_CLEAR);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/GPIO/DIRECTION/INPUT",  handle_REST_GPIO_DIRECTION_INPUT);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/GPIO/DIRECTION/OUTPUT", handle_REST_GPIO_DIRECTION_OUTPUT);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/LOG/SET",               handle_REST_LOG_SET);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/FILE",                  handle_REST_FILE_GET);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/FILE",                  handle_REST_FILE_POST);
+  	 pHttpServer->addPathHandler("DELETE", "/ESP32/FILE",                  handle_REST_FILE_DELETE);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/SYSTEM",                handle_REST_SYSTEM);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/I2C/COMMAND",           handle_REST_I2C_COMMAND_READ);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/COMMAND",           handle_REST_I2C_COMMAND_WRITE);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/INIT",              handle_REST_I2C_INIT);
+  	 pHttpServer->addPathHandler("GET",    "/ESP32/I2C/SCAN",              handle_REST_I2C_SCAN);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/DEINIT",            handle_REST_I2C_CLOSE);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_SCAN);
+	   	 //pHttpServer->setMultiPartFactory(new MyMultiPartFactory());
+  	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
+  	 pHttpServer->start(80); // Start the WebServer listening on port 80.
+>>>>>>> upstream/master
    }
 };
 
@@ -444,7 +475,7 @@ class TFTPTask : public Task {
 
 ESP32_Explorer::ESP32_Explorer() {
 	//m_pBLEExplorer = new BLEExplorer();
-	g_pBLEExplorer = new BLEExplorer();
+	//g_pBLEExplorer = new BLEExplorer();
 } // ESP32_Explorer
 
 
