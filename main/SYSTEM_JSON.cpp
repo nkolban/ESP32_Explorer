@@ -1,4 +1,5 @@
-
+#include "sdkconfig.h"
+#include <algorithm>
 #include <stdlib.h>
 #include <JSON.h>
 #include <WiFi.h>
@@ -55,7 +56,7 @@ static JsonObject fromTaskStatus(TaskStatus_t *pTaskStatus) {
 	obj.setInt("stackHighWater", pTaskStatus->usStackHighWaterMark);   // stackHighWater
 	obj.setInt("priority",       pTaskStatus->uxCurrentPriority);      // priority
 	obj.setInt("taskNumber",     pTaskStatus->xTaskNumber);            // taskNumber
-	char *state = "";
+	std::string state = "";
 	switch(pTaskStatus->eCurrentState) {
 		case eReady: {
 			state = "Ready";
@@ -146,22 +147,29 @@ JsonObject SYSTEM_JSON() {
 	obj.setInt("taskCount", taskCount);
 
 #if( configUSE_TRACE_FACILITY == 1 )
-	TaskStatus_t *pTaskStatusArray = (TaskStatus_t *)malloc(sizeof(TaskStatus_t) * taskCount);
+	TaskStatus_t *pTaskStatusArray = new TaskStatus_t[taskCount];
 	assert(pTaskStatusArray != nullptr);
 	taskCount = ::uxTaskGetSystemState(pTaskStatusArray, taskCount, nullptr);
+	std::sort(pTaskStatusArray, pTaskStatusArray+taskCount, [](TaskStatus_t a, TaskStatus_t b) {
+		std::string n1 = std::string(a.pcTaskName);
+		std::string n2 = std::string(b.pcTaskName);
+		return n1.compare(n2) < 0;
+	});
 
 	JsonArray arr2 = JSON::createArray();
 	for (int i=0; i<taskCount; i++) {
+		/*
 		ESP_LOGD(LOG_TAG, "Task name: %s, stack high water: %d, runtime counter: %d, current priority: %d, task number: %d", pTaskStatusArray[i].pcTaskName,
 			pTaskStatusArray[i].usStackHighWaterMark,
 			pTaskStatusArray[i].ulRunTimeCounter,
 			pTaskStatusArray[i].uxCurrentPriority,
 			pTaskStatusArray[i].xTaskNumber
 		);
+		*/
 		arr2.addObject(fromTaskStatus(&pTaskStatusArray[i]));
 	}
 	obj.setArray("taskStatus", arr2);
-	free(pTaskStatusArray);
+	delete[] pTaskStatusArray;
 #endif
 
 
