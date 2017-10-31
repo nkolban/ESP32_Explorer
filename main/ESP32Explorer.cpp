@@ -59,6 +59,7 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< HEAD
 <<<<<<< HEAD
 	uint8_t result = g_pBLEExplorer->scan();
@@ -73,6 +74,9 @@ static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pRe
 =======
 	//g_pBLEExplorer->scan();
 >>>>>>> upstream/master
+=======
+	JsonArray obj = g_pBLEExplorer->scan();
+	pResponse->addHeader("access-control-allow-origin", "*");
 =======
 	JsonArray obj = g_pBLEExplorer->scan();
 	pResponse->addHeader("access-control-allow-origin", "*");
@@ -92,10 +96,30 @@ static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* 
 	}
 	JsonArray obj = g_pBLEExplorer->connect(m.at("connect").c_str());
 	pResponse->addHeader("access-control-allow-origin", "*");
+>>>>>>> Stashed changes
 	pResponse->addHeader("Content-Type", "application/json");
 	pResponse->sendData(obj.toString());
 	JSON::deleteArray(obj);
    	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
+<<<<<<< Updated upstream
+} // handle_REST_BLE_CLIENT_SCAN
+
+static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* pResponse) {
+	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_CONNECT");
+	std::map<std::string, std::string> m = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		ESP_LOGD(LOG_TAG, "Method: %s", m.at("connect").c_str());
+		if(m.count("connect") > 0)
+			ESP_LOGD(LOG_TAG, "Query: %s", m.at("connect").c_str());
+	}
+	JsonArray obj = g_pBLEExplorer->connect(m.at("connect").c_str());
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
+	JSON::deleteArray(obj);
+   	ESP_LOGD(LOG_TAG, "%d", xPortGetFreeHeapSize());
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 } // handle_REST_BLE_CLIENT_SCAN
 
