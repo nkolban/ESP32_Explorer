@@ -74,7 +74,6 @@ JsonArray BLEExplorer::connect(std::string _addr){
  */
 JsonArray BLEExplorer::scan() {
 	ESP_LOGD(LOG_TAG, ">> scan");
-	BLEDevice::init("");
 
 	BLEScan* pBLEScan = BLEDevice::getScan();
 	pBLEScan->setActiveScan(true);

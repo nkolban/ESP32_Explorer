@@ -7,7 +7,6 @@
 
 #ifndef MAIN_ESP32EXPLORER_H_
 #define MAIN_ESP32EXPLORER_H_
-#include "BLEExplorer.h_SAVE"
 
 class ESP32_Explorer {
 public:
@@ -15,7 +14,6 @@ public:
 	virtual ~ESP32_Explorer();
 	void start();
 private:
-	BLEExplorer *m_pBLEExplorer;
 };
 
 #endif /* MAIN_ESP32EXPLORER_H_ */

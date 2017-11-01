@@ -21,13 +21,11 @@
 #include <WiFi.h>
 #include <stdio.h>
 #include <driver/i2c.h>
-
+#include "BLEExplorer.h"
 #include <GeneralUtils.h>
 
 #include <esp_wifi.h>
-extern "C"{
-#include "esp_heap_trace.h"
-}
+
 static const char* LOG_TAG = "ESP32Explorer";
 
 static BLEExplorer* g_pBLEExplorer;
@@ -58,13 +56,6 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
-
-	uint8_t result = g_pBLEExplorer->scan();
-	pResponse->addHeader("access-control-allow-origin", "*");
-	//pResponse->addHeader("Content-Type", "application/json");
-	char resp[20];
-	sprintf(resp, "found %d devices", result);
-	pResponse->sendData(resp);
 
 	JsonArray obj = g_pBLEExplorer->scan();
 	pResponse->addHeader("access-control-allow-origin", "*");
@@ -455,9 +446,11 @@ class WebServerTask : public Task {
   	 pHttpServer->addPathHandler("GET",    "/ESP32/I2C/SCAN",              handle_REST_I2C_SCAN);
   	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/DEINIT",            handle_REST_I2C_CLOSE);
   	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_SCAN);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_CONNECT);
 	   	 //pHttpServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pHttpServer->start(80); // Start the WebServer listening on port 80.
+   	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
    }
 };
 

@@ -12,7 +12,7 @@
 #include <string>
 #include "ESP32Explorer.h"
 //#include "bt.h"
-//#include <BLEDevice.h>
+#include <BLEDevice.h>
 
 static const char *WIFI_SSID     = "Orange-8F54";
 static const char *WIFI_PASSWORD = "33413006";
@@ -66,9 +66,10 @@ void task_webserver(void* ignore) {
  * @brief Main entry point.
  */
 int app_main(void) {
-/*	BLEDevice::init("");
    	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
-	esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+	BLEDevice::init("");
+   	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
+/*	esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
    	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());*/
     ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
 
