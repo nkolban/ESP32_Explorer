@@ -1,4 +1,4 @@
-
+#include "Memory.h"
 #include "sdkconfig.h"
 #include <esp_log.h>
 #include <FATFS_VFS.h>
@@ -11,16 +11,10 @@
 #include <stdio.h>
 #include <string>
 #include "ESP32Explorer.h"
-//#include "bt.h"
-#include <BLEDevice.h>
+#include "bt.h"
 
 static const char *WIFI_SSID     = "Orange-8F54";
 static const char *WIFI_PASSWORD = "33413006";
-extern "C"{
-#include "esp_heap_trace.h"
-}
-#define NUM_RECORDS 100
-static heap_trace_record_t trace_record[NUM_RECORDS]; // This buffer must be in internal RAM
 
 extern "C" {
 	int app_main(void);
@@ -66,13 +60,9 @@ void task_webserver(void* ignore) {
  * @brief Main entry point.
  */
 int app_main(void) {
-   	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
-	BLEDevice::init("");
-   	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
-/*	esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
-   	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());*/
-    ESP_ERROR_CHECK( heap_trace_init_standalone(trace_record, NUM_RECORDS) );
-
+	esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
+  	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
+Memory::init(500);
 	task_webserver(nullptr);
 	return 0;
 } // app_main

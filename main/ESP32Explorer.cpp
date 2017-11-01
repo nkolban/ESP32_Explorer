@@ -40,7 +40,7 @@ extern JsonObject I2C_READ(std::vector<std::string> parts);
 extern JsonObject I2C_WRITE(std::vector<std::string> parts);
 extern JsonObject I2C_SCAN_JSON();
 
-static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handleTest called");
 	ESP_LOGD(LOG_TAG, "Path: %s" ,pRequest->getPath().c_str());
 	ESP_LOGD(LOG_TAG, "Method: %s", pRequest->getMethod().c_str());
@@ -54,7 +54,7 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	pResponse->sendData("hello!");
 } // handleTest
 
-static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_SCAN");
 
 	JsonArray obj = g_pBLEExplorer->scan();
@@ -66,7 +66,7 @@ static void handle_REST_BLE_CLIENT_SCAN(HttpRequest* pRequest, HttpResponse* pRe
 } // handle_REST_BLE_CLIENT_SCAN
 
 
-static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_BLE_CLIENT_CONNECT");
 	std::map<std::string, std::string> m = pRequest->parseForm();
 	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
@@ -83,7 +83,7 @@ static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* 
 } // handle_REST_BLE_CLIENT_SCAN
 
 
-static void handle_REST_SYSTEM(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_SYSTEM(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -103,7 +103,7 @@ static void handle_REST_I2S(HttpRequest *pRequest, HttpResponse *pResponse) {
 } // handle_REST_I2S
 
 
-static void handle_REST_GPIO(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_GPIO(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -127,7 +127,7 @@ static void handle_REST_GPIO_SET(HttpRequest *pRequest, HttpResponse *pResponse)
 } // handle_REST_GPIO_SET
 
 
-static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_CLEAR");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -141,7 +141,7 @@ static void handle_REST_GPIO_CLEAR(HttpRequest *pRequest, HttpResponse *pRespons
 } // handle_REST_GPIO_CLEAR
 
 
-static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_INPUT");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -155,7 +155,7 @@ static void handle_REST_GPIO_DIRECTION_INPUT(HttpRequest *pRequest, HttpResponse
 } // handle_REST_GPIO_DIRECTION_INPUT
 
 
-static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_GPIO_DIRECTION_OUTPUT");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -169,7 +169,7 @@ static void handle_REST_GPIO_DIRECTION_OUTPUT(HttpRequest *pRequest, HttpRespons
 } // handle_REST_GPIO_DIRECTION_OUTPUT
 
 
-static void handle_REST_WiFi(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_WiFi(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_WIFI");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -179,7 +179,7 @@ static void handle_REST_WiFi(HttpRequest* pRequest, HttpResponse* pResponse) {
 } // handle_REST_WiFi
 
 
-static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_LOG_SET");
 	std::vector<std::string> parts = pRequest->pathSplit();
 	std::stringstream stream(parts[4]);
@@ -194,7 +194,7 @@ static void handle_REST_LOG_SET(HttpRequest* pRequest, HttpResponse* pResponse) 
 } // handle_REST_LOG_SET
 
 
-static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_GET");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -216,7 +216,7 @@ static void handle_REST_FILE_GET(HttpRequest *pRequest, HttpResponse *pResponse)
 } // handle_REST_FILE_GET
 
 
-static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_DELETE");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -232,7 +232,7 @@ static void handle_REST_FILE_DELETE(HttpRequest *pRequest, HttpResponse *pRespon
 } // handle_REST_FILE_GET
 
 
-static void handle_REST_FILE_POST(HttpRequest* pRequest, HttpResponse* pResponse) {
+IRAM_ATTR static void handle_REST_FILE_POST(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_FILE_POST");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	std::vector<std::string> parts = pRequest->pathSplit();
@@ -342,7 +342,7 @@ class MyWebSocketHandlerFactory : public WebServer::WebSocketHandlerFactory {
 };
 */
 
-static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -374,7 +374,7 @@ static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse)
 	JSON::deleteObject(obj);
 } // handle_REST_I2C_INIT
 
-static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> delete_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -390,7 +390,7 @@ static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse
 	JSON::deleteObject(obj);
 } // handle_REST_I2C_CLOSE
 
-static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -399,7 +399,7 @@ static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse)
 	JSON::deleteObject(obj);
 } // handle_REST_I2C_SCAN
 
-static void handle_REST_I2C_COMMAND_READ(HttpRequest *pRequest, HttpResponse *pResponse) {
+IRAM_ATTR static void handle_REST_I2C_COMMAND_READ(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "application/json");
@@ -446,7 +446,7 @@ class WebServerTask : public Task {
   	 pHttpServer->addPathHandler("GET",    "/ESP32/I2C/SCAN",              handle_REST_I2C_SCAN);
   	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/DEINIT",            handle_REST_I2C_CLOSE);
   	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_SCAN);
-  	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_CONNECT);
+  	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/CONNECT",       handle_REST_BLE_CLIENT_CONNECT);
 	   	 //pHttpServer->setMultiPartFactory(new MyMultiPartFactory());
   	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
   	 pHttpServer->start(80); // Start the WebServer listening on port 80.
@@ -480,7 +480,7 @@ void ESP32_Explorer::start() {
   	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 
 	WebServerTask* webServerTask = new WebServerTask();
-	webServerTask->setStackSize(22000);
+	webServerTask->setStackSize(12000);
 	webServerTask->start();
   	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
 

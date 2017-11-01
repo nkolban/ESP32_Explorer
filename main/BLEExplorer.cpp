@@ -10,6 +10,7 @@
 #include <esp_log.h>
 #include <BLEDevice.h>
 #include "Task.h"
+#include "Memory.h"
 
 #include "BLEClient.h"
 static const char* LOG_TAG = "BLEExplorer";
@@ -30,7 +31,7 @@ JsonObject BLEExplorer::enumerateServices(BLERemoteService *p, std::map<std::str
 	obj.setString("id", p->getUUID().toString());
 	obj.setString("text", p->getUUID().toString());
 	obj.setString("icon", "service");
-	obj.setString("parent", "#");
+	//obj.setString("parent", "#");
 	JsonObject state = JSON::createObject();
 	state.setBoolean("opened", true);
 	obj.setObject("state", state);
@@ -48,6 +49,7 @@ JsonObject BLEExplorer::enumerateServices(BLERemoteService *p, std::map<std::str
 }
 
 JsonArray BLEExplorer::connect(std::string _addr){
+	Memory::startTraceAll();
 	BLEAddress *pAddress = new BLEAddress(_addr);
 	BLEClient*  pClient  = BLEDevice::createClient();
 
@@ -67,6 +69,8 @@ JsonArray BLEExplorer::connect(std::string _addr){
 	pClient->disconnect();
 	free(pAddress);
 	free(pClient);
+	Memory::stopTrace();
+	Memory::dump();
 	return arr;
 }
 /**
@@ -75,6 +79,7 @@ JsonArray BLEExplorer::connect(std::string _addr){
 JsonArray BLEExplorer::scan() {
 	ESP_LOGD(LOG_TAG, ">> scan");
 
+	BLEDevice::init("");
 	BLEScan* pBLEScan = BLEDevice::getScan();
 	pBLEScan->setActiveScan(true);
 	BLEScanResults scanResults = pBLEScan->start(5);
