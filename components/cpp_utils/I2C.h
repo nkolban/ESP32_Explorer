@@ -1,0 +1,54 @@
+/*
+ * I2C.h
+ *
+ *  Created on: Feb 24, 2017
+ *      Author: kolban
+ */
+
+#ifndef MAIN_I2C_H_
+#define MAIN_I2C_H_
+#include <stdint.h>
+#include <sys/types.h>
+#include <driver/i2c.h>
+#include <driver/gpio.h>
+
+
+/**
+ * @brief Interface to %I2C functions.
+ */
+class I2C {
+private:
+	uint8_t          m_address;
+	i2c_cmd_handle_t m_cmd;
+	bool             m_directionKnown;
+	gpio_num_t       m_sdaPin;
+	gpio_num_t       m_sclPin;
+
+public:
+	/**
+	 * @brief The default SDA pin.
+	 */
+	static const gpio_num_t DEFAULT_SDA_PIN = GPIO_NUM_25;
+	/**
+	 * @brief The default Clock pin.
+	 */
+	static const gpio_num_t DEFAULT_CLK_PIN = GPIO_NUM_26;
+
+	I2C();
+	void beginTransaction();
+	void endTransaction();
+	uint8_t getAddress() const;
+	void init(uint8_t address, gpio_num_t sdaPin = DEFAULT_SDA_PIN, gpio_num_t sclPin = DEFAULT_CLK_PIN);
+	void read(uint8_t* bytes, size_t length, bool ack=true);
+	void read(uint8_t* byte, bool ack=true);
+	void scan();
+	void setAddress(uint8_t address);
+	void setDebug(bool enabled);
+	bool slavePresent(uint8_t address);
+	void start();
+	void stop();
+	void write(uint8_t byte, bool ack=true);
+	void write(uint8_t* bytes, size_t length, bool ack=true);
+};
+
+#endif /* MAIN_I2C_H_ */
