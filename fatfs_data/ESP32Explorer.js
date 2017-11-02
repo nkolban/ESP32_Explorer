@@ -4,6 +4,7 @@ $(function() {
 	var fileNameDeferred = null;
 	const FILE_DIRECTORY = 2; // Type of file that is a directory
 	const FILE_REGULAR   = 1; // Type of file that is a regular file
+	var bleClient = null;
 	
 	function getFileNameDialog() {
 		fileNameDeferred = jQuery.Deferred();
@@ -34,15 +35,17 @@ $(function() {
 		});
 	} // getData
 	
-	function deleteData(path, callback) {
+	function deleteData(path, callback, _data) {
 		doRest(path, callback, {
-			method   : "DELETE"
+			method   : "DELETE",
+			data: _data
 		});
 	} // deleteData
 
-	function postData(path, callback) {
+	function postData(path, callback, _data) {
 		doRest(path, callback, {
-			method   : "POST"
+			method   : "POST",
+			data: _data
 		});
 	} // postData
 	
@@ -74,7 +77,7 @@ $(function() {
 	} // addFileDirectory
 	
 	
-	function buildFileSystemTree(path) {
+	function buildFileSystemTree(path) {  // TODO refactor to match new regex
 		if (path.length == 0) {
 			return;
 		}
@@ -166,18 +169,22 @@ $(function() {
 	$("#wifiTabs").tabs();
 	$("#i2cTabs").tabs();
 	$("#bleTabs").tabs();
+	
 	$("#systemLoggingTab [name='systemLogging']").checkboxradio().on("change", function(event) {
-		postData("/ESP32/LOG/SET/" + $(event.target).attr("data-logLevel"));
+		postData("/ESP32/LOG/SET", null, 
+		{
+			"level":$(event.target).attr("data-logLevel")
+		});
 	});
 	
 	$("#inputGpioDialog").checkboxradio().on("change", function(event) {
 		var gpio = $(event.target).attr("data-gpio");
-		postData("/ESP32/GPIO/DIRECTION/INPUT/" + gpio);
+		postData("/ESP32/GPIO/DIRECTION/INPUT", null, {"gpio": gpio});
 		//debugger;
 	});
 	$("#outputGpioDialog").checkboxradio().on("change", function(event) {
 		var gpio = $(event.target).attr("data-gpio");
-		postData("/ESP32/GPIO/DIRECTION/OUTPUT/" + gpio);
+		postData("/ESP32/GPIO/DIRECTION/OUTPUT", null, {"gpio": gpio});
 		//debugger;
 	});
 	
@@ -209,9 +216,11 @@ $(function() {
 				var state = event.target.checked;
 				console.log("State of " + gpio + " now " + state);
 				if (state) {
-					postData("/ESP32/GPIO/SET/" + gpio);
+					postData("/ESP32/GPIO/SET", null,
+					{"gpio": gpio});
 				} else {
-					postData("/ESP32/GPIO/CLEAR/" + gpio);
+					postData("/ESP32/GPIO/CLEAR", null,
+					{"gpio": gpio});
 				}
 			});
 			checkBox.attr("id", "gpio" + gpioNum + "Checkbox");
@@ -287,7 +296,7 @@ $(function() {
 		}
 	);
 
-	$("#wifiRefreshButton").button().click(function() {
+	$("#wifiRefreshButton").button().click(function() {  
 		getData("/ESP32/WIFI", function(data) {
 			$("#wifiJsonText").val(JSON.stringify(data, null, "  "));
 			$("#modeWifi").text(data.mode);
@@ -303,10 +312,24 @@ $(function() {
 			$("#staNetmaskWifi").text(data.staIpInfo.netmask);			
 		})
 	});
-	
+
 	$("#bleScanButton").button().click(function(){
-		postData("/ESP32/BLE/CLIENT/SCAN", function(data) {
-			
+		getData("/ESP32/BLE/CLIENT/SCAN", function(data) {
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
+			$('#bleTree').jstree(true).settings.core.data = data;
+			$('#bleTree').jstree(true).refresh();
+		})
+	});
+
+	$("#bleConnectButton").button().click(function(){
+		var sel = bleClient;
+		postData("/ESP32/BLE/CLIENT/CONNECT", function(data) {
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
+			$('#bleServicesTree').jstree(true).settings.core.data = data;
+			$('#bleServicesTree').jstree(true).refresh();
+		}, 
+		{
+			"connect" : bleClient.node.id
 		})
 	});
 
@@ -442,7 +465,7 @@ $(function() {
 		]
 	});
 	
-	$("#i2cScanButton").button().click(function() {
+	$("#i2cScanButton").button().click(function() {  //TODO add to scan which one port?
 		getData("/ESP32/I2C/SCAN", function(data) {
 			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
 			// Loop through each of the I2C address.
@@ -458,33 +481,51 @@ $(function() {
 		});
 	});
 
-	$("#i2cReadButton").button().click(function() {
+	$("#i2cReadButton").button().click(function() { //TODO populate read values
 		var address = $("#i2c_adr").val();
 		var reg     = $("#i2c_reg").val();
 		var count   = $("#i2c_cnt").val();
 		var data    = $("#i2c_data").val();
 		var sda     = $("#i2c_sda").val();
 		var scl     = $("#i2c_scl").val();
-		getData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
-			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
+		postData("/ESP32/I2C/COMMAND/READ", function(data) {
+			$("#i2cJsonText").val(JSON.stringify(data, null, "  "))}, 
+		{
+			"address": address,  //i2c address to read
+			"register": reg,  //register to read
+			"bytesCount": count, // bytes to read
+			"data": data, // do we need this?
+			"sda": sda,   // do we need this?
+			"scl": scl    // do we need this?
 		});
 	});
 
-	$("#i2cWriteButton").button().click(function() {
+	$("#i2cWriteButton").button().click(function() { 
 		var address = $("#i2c_adr").val();
 		var reg     = $("#i2c_reg").val();
 		var count   = $("#i2c_cnt").val();
 		var data    = $("#i2c_data").val();
 		var sda     = $("#i2c_sda").val();
 		var scl     = $("#i2c_scl").val();
-		postData("/ESP32/I2C/COMMAND/" + address + "/" + reg + "/" + count + "/" + data + "/" + sda + "/" + scl, function(data) {
+		postData("/ESP32/I2C/COMMAND/WRITE", function(data) {
 			$("#i2cJsonText").val(JSON.stringify(data, null, "  "));
+		},
+		{
+			"address": address,
+			"register": reg,
+			"bytesCount": count,
+			"data": data,
+			"sda": sda, // do we need this?
+			"scl": scl  // do we need this?
 		});
 	});
 
 	$("#i2cCloseButton").button().click(function() {
 		var port = $('input[name=i2c_port]:checked').val();
-		postData("/ESP32/I2C/DEINIT/" + port);
+		postData("/ESP32/I2C/DEINIT", null, 
+		{
+			"port": port // I2C_NUM_0(1)
+		});
 	});
 
 	$("#i2cInitButton").button().click(function() {
@@ -493,7 +534,14 @@ $(function() {
 		var scl   = $("#i2c_scl").val();
 		var speed = $("#i2c_speed").val();
 		var mode  = $('input[name=i2c_mode]:checked').val();
-		postData("/ESP32/I2C/INIT/" + port + "/" + sda + "/" + scl + "/" + speed + "/" + mode);
+		postData("/ESP32/I2C/INIT", null, 
+		{
+			"port": port,  //i2c port to init --> I2C_NUM_0(1)
+			"sda": sda,    //SDA PIN
+			"scl": scl,    //SCL PIN
+			"speed": speed,//SPEED
+			"mode": mode   //MODE --> SLAVE/MASTER
+		});
 	});
 
 	
@@ -526,5 +574,71 @@ $(function() {
 		} // End for each column.
 		table.append(tr);
 	} // End for each row.
+
+	$('#bleTree').on('select_node.jstree', function(node, selected, event){
+		bleClient = selected;
+	});
+		
+	$('#bleTree').jstree({
+	  "core" : {
+	  	"multiple":false,
+	    "animation" : 0,
+	    "check_callback" : true,
+	    "themes" : { "stripes" : true }
+	  },
+	  "types" : {
+	    "#" : {
+	      "max_children" : 10,
+	      "max_depth" : 4,
+	      "valid_children" : ["root", "device"]
+	    },
+	    "root" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["device"]
+	    },
+	    "device" : {
+	      "valid_children" : ["service"]
+	    },
+	    "service" : {
+	      "valid_children" : ["characteristic"]
+	    },
+	    "characteristic" : {
+	      "valid_children" : []
+	    }
+	  },
+	  "plugins" : []
+	});
+
+	$('#bleServicesTree').jstree({
+	  "core" : {
+	  	"multiple":false,
+	    "animation" : 0,
+	    "check_callback" : true,
+	    "themes" : { "stripes" : true }
+	  },
+	  "types" : {
+	    "#" : {
+	      "max_children" : 10,
+	      "max_depth" : 4,
+	      "valid_children" : ["root"]
+	    },
+	    "root" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["default", "service"]
+	    },
+	    "default" : {
+	      "valid_children" : ["default", "service"]
+	    },
+	    "service" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["characteristic"]
+	    },
+	    "characteristic" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["default"]
+	    }
+	  },
+	  "plugins" : []
+	});
 
 });

@@ -4,8 +4,8 @@
  *  Created on: 18.09.2017
  *      Author: darek
  */
-
-#include <vector>
+#include <string>
+#include <map>
 #include <stdlib.h>
 #include <JSON.h>
 extern "C" {
@@ -13,19 +13,14 @@ extern "C" {
 }
 #include "I2C.h"
 
-JsonObject I2C_READ(std::vector<std::string> parts) {
-	uint8_t SDA, SCL, ADDR, bytes, REG;
-	std::string hex_byte;
-	//uint8_t dat[1];
-	//stream >> SDA;
-	//std::stringstream stream1(parts[5]);
-	//stream1 >> SCL;
-	bytes = atoi(parts[6].c_str());
-	SDA = atoi(parts[8].c_str());
-	SCL = atoi(parts[9].c_str());
-	ADDR = atoi(parts[4].c_str());
-	REG = atoi(parts[5].c_str());
-	hex_byte = parts[7].c_str();
+JsonObject I2C_READ(std::map<std::string, std::string> parts) {
+	uint8_t SDA, SCL, ADDR, REG;
+	uint8_t bytes = atoi(parts.at("bytesCount").c_str());
+	SDA = atoi(parts.at("sda").c_str());
+	SCL = atoi(parts.at("scl").c_str());
+	ADDR = atoi(parts.at("address").c_str());
+	REG = atoi(parts.at("register").c_str());
+
 
 	JsonObject obj = JSON::createObject();
 	JsonObject tmpObj = JSON::createObject();
@@ -53,19 +48,17 @@ JsonObject I2C_READ(std::vector<std::string> parts) {
 	return obj;
 }
 
-JsonObject I2C_WRITE(std::vector<std::string> parts) {
+JsonObject I2C_WRITE(std::map<std::string, std::string> parts) {
 	uint8_t SDA, SCL, ADDR, REG;
 	std::string hex_byte;
+	uint8_t bytes = atoi(parts.at("bytesCount").c_str());
 	uint8_t dat[1];
-	//stream >> SDA;
-	//std::stringstream stream1(parts[5]);
-	//stream1 >> SCL;
-	//bytes = atoi(parts[6].c_str());
-	SDA = atoi(parts[8].c_str());
-	SCL = atoi(parts[9].c_str());
-	ADDR = atoi(parts[4].c_str());
-	REG = atoi(parts[5].c_str());
-	dat[0] = atoi(parts[7].c_str());
+
+	SDA = atoi(parts.at("sda").c_str());
+	SCL = atoi(parts.at("scl").c_str());
+	ADDR = atoi(parts.at("address").c_str());
+	REG = atoi(parts.at("register").c_str());
+	dat[0] = atoi(parts.at("data").c_str());
 
 	JsonObject obj = JSON::createObject();
 	JsonObject tmpObj = JSON::createObject();
@@ -84,5 +77,6 @@ JsonObject I2C_WRITE(std::vector<std::string> parts) {
 
 
 	obj.setObject("error", tmpObj);
+//	free(dat);
 	return obj;
 }
