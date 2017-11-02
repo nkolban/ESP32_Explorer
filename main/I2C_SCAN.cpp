@@ -27,7 +27,7 @@ JsonObject I2C_SCAN_JSON() {
 	printf("00:         ");
 
 	I2C i2c;
-	i2c.init(0);
+//	i2c.init(0);
 
 	for (i=3; i< 0x78; i++) {   // Loop over each of the possible I2C addresses.
 		bool slavePresent = i2c.slavePresent(i);
