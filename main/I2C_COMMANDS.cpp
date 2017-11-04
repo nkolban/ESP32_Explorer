@@ -7,6 +7,8 @@
 #include <string>
 #include <map>
 #include <stdlib.h>
+#include <stdio.h>
+#include <driver/gpio.h>
 #include <JSON.h>
 extern "C" {
 	#include <soc/i2c_struct.h>
@@ -16,10 +18,10 @@ extern "C" {
 JsonObject I2C_READ(std::map<std::string, std::string> parts) {
 	uint8_t SDA, SCL, ADDR, REG;
 	uint8_t bytes = atoi(parts.at("bytesCount").c_str());
-	SDA = atoi(parts.at("sda").c_str());
-	SCL = atoi(parts.at("scl").c_str());
+	SDA  = atoi(parts.at("sda").c_str());
+	SCL  = atoi(parts.at("scl").c_str());
 	ADDR = atoi(parts.at("address").c_str());
-	REG = atoi(parts.at("register").c_str());
+	REG  = atoi(parts.at("register").c_str());
 
 
 	JsonObject obj = JSON::createObject();
@@ -37,6 +39,7 @@ JsonObject I2C_READ(std::map<std::string, std::string> parts) {
 	i2c->read(data+bytes-1, false);
 	i2c->endTransaction();
 	//i2c->stop();
+	delete i2c;
 
 	for(int i=0;i<bytes;i++){
 		char tmp[bytes];
@@ -48,16 +51,17 @@ JsonObject I2C_READ(std::map<std::string, std::string> parts) {
 	return obj;
 }
 
+
 JsonObject I2C_WRITE(std::map<std::string, std::string> parts) {
 	uint8_t SDA, SCL, ADDR, REG;
 	std::string hex_byte;
 	uint8_t bytes = atoi(parts.at("bytesCount").c_str());
 	uint8_t dat[1];
 
-	SDA = atoi(parts.at("sda").c_str());
-	SCL = atoi(parts.at("scl").c_str());
-	ADDR = atoi(parts.at("address").c_str());
-	REG = atoi(parts.at("register").c_str());
+	SDA    = atoi(parts.at("sda").c_str());
+	SCL    = atoi(parts.at("scl").c_str());
+	ADDR   = atoi(parts.at("address").c_str());
+	REG    = atoi(parts.at("register").c_str());
 	dat[0] = atoi(parts.at("data").c_str());
 
 	JsonObject obj = JSON::createObject();
@@ -74,6 +78,7 @@ JsonObject I2C_WRITE(std::map<std::string, std::string> parts) {
 	i2c->write(dat[bytes-1], false);*/
 	i2c->write(dat[0], false);
 	i2c->endTransaction();
+	delete i2c;
 
 
 	obj.setObject("error", tmpObj);

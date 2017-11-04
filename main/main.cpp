@@ -13,10 +13,10 @@
 #include "ESP32Explorer.h"
 #include "bt.h"
 
-//static const char *WIFI_SSID     = "sweetie";
-//static const char *WIFI_PASSWORD = "l16wint!";
-static const char *WIFI_SSID     = "Orange-8F54";
-static const char *WIFI_PASSWORD = "33413006";
+static const char WIFI_SSID[]     = "sweetie";
+static const char WIFI_PASSWORD[] = "l16wint!";
+//static const char *WIFI_SSID     = "Orange-8F54";
+//static const char *WIFI_PASSWORD = "33413006";
 
 extern "C" {
 	int app_main(void);
