@@ -45,7 +45,6 @@ JsonArray BLEExplorer::scan() {
 	}
 	obj.setInt("deviceCount", scanResults.getCount());
 	ESP_LOGD(LOG_TAG, "<< scan");
-	free(pBLEScan);
 	return arr;
 } // scan
 /*
@@ -60,7 +59,7 @@ JsonArray BLEExplorer::connect(std::string _addr){
 	std::map<std::string, BLERemoteService*> *pRemoteServices = pClient->getServices();
 	if (pRemoteServices == nullptr) {
 		ESP_LOGD(LOG_TAG, "Failed to find services");
-		return 0;
+		return JSON::createArray();
 	}
 //	Memory::startTraceAll();
 	JsonArray arr = JSON::createArray();

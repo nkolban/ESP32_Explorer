@@ -12,7 +12,7 @@
 #include <freertos/task.h>
 #include <esp_log.h>
 
-const static char* LOG_TAG = "SYSTEM_JSON";
+const static char LOG_TAG[] = "SYSTEM_JSON";
 /**
  * @brief Obtain a JSON object describing a partition.
  *
