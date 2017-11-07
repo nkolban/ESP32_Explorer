@@ -310,21 +310,21 @@
 					<form style="margin-top: 8px;" action=javascript:void(0);>
 					<fieldset>
 						<legend>Open/close I2C</legend>
-						<div>
-							<label>I2C port</label>
-							<label><input type="radio" name="i2c_port" value="0" checked> i2c 0</label>
-							<label><input type="radio" name="i2c_port" value="1"> i2c 1</label>
-						</div>
-						<div>
-							<label>I2C mode</label>
-							<label><input type="radio" name="i2c_mode" value="1" checked> master</label>
-							<label><input type="radio" name="i2c_mode" value="0"> slave</label>
-						</div>
-						<div><label for="i2c_sda">SDA pin</label><input id="i2c_sda"></div>
-						<div><label for="i2c_scl">SCL pin</label><input id="i2c_scl"></div>
-						<div><label for="i2c_speed">Speed</label><input id="i2c_speed"></div>
-						<button id="i2cInitButton">Open</button>
-						<button id="i2cCloseButton">Close</button>
+						<table><tr>
+							<td>I2C port</td>
+							<td><label><input type="radio" name="i2c_port" value="0" checked> i2c port 0</label>
+							<label><input type="radio" name="i2c_port" value="1"> i2c port 1</label></td>
+						</tr>
+						<tr>
+							<td>I2C mode</td>
+							<td><label><input type="radio" name="i2c_mode" value="1" checked> master</label>
+							<label><input type="radio" name="i2c_mode" value="0"> slave</label></td>
+						</tr>
+						<tr><td>SDA pin</td><td><input id="i2c_sda"></td>
+						<tr><td>SCL pin</td><td><input id="i2c_scl"></td>
+						<tr><td>Speed</td><td><input id="i2c_speed"></td></tr></table>
+						<button id="i2cInitButton">Open port</button>
+						<button id="i2cCloseButton">Close port</button>
 					</fieldset>
 					</form>
 
@@ -336,12 +336,13 @@
 							<label><input type="radio" name="i2c_mode" value="1" checked> master</label>
 							<label><input type="radio" name="i2c_mode" value="0"> slave</label>
 						</div>-->
-						<div><label for="i2c_adr">I2c address</label><input id="i2c_adr"></div>
-						<div><label for="i2c_reg">Register</label><input id="i2c_reg"></div>
-						<div><label for="i2c_cnt">Bytes   </label><input id="i2c_cnt"></div>
-						<div><label for="i2c_data">Data    </label><input id="i2c_data"></div>
-						<button id="i2cReadButton">Read i2c register</button>
-						<button id="i2cWriteButton">Write i2c register</button>
+						<table>
+						<tr><td>I2C address</td><td><input id="i2c_adr"></td></tr>
+						<tr><td>Register</td><td><input id="i2c_reg"></td></tr>
+						<tr><td>Bytes   </td><td><input id="i2c_cnt"></td></tr>
+						<tr><td>Data    </td><td><input id="i2c_data"></td></tr></table>
+						<button id="i2cReadButton">Read register</button>
+						<button id="i2cWriteButton">Write register</button>
 					</fieldset>
 					</form>
 				</div>
@@ -385,7 +386,17 @@
 					<div id="bleServicesTree" ></div>
 				</div>
 				<div id="bleServerTabsGeneralTab">  <!-- TODO add service to server, add characteristic to service, add descriptor, stop adverising, stop server -->
-					<button id="bleAdvertiseButton">Advertise</button>
+					<table><tr><td>UUID:</td><td  colspan="2"><input type="text" id="bleFormData"  style="width: -webkit-fill-available;"></td></tr>
+					<tr><td><button id="bleCreateServerButton" style="width: -webkit-fill-available;">Create server</button></td>
+					<td><button id="bleAdvertiseButton" style="width: -webkit-fill-available;">Start advertising</button></td>
+					<td><button id="bleStopAdvertisingButton" style="width: -webkit-fill-available;">Stop advertising</button></td></tr>
+					<tr><td><button id="bleAddServiceButton" style="width: -webkit-fill-available;">Add service</button></td>
+					<td><button id="bleAddCharacteristicButton" style="width: -webkit-fill-available;">Add characteristic</button></td>
+					<td><button id="bleAddDescriptorButton" style="width: -webkit-fill-available;">Add descriptor</button></td></tr>
+					<tr><td><button id="bleDeleteServiceButton" style="width: -webkit-fill-available;">Delete service</button></td>
+					<td><button id="bleDeleteCharacteristicButton" style="width: -webkit-fill-available;">Delete characteristic</button></td>
+					<td><button id="bleDeleteDescriptorButton" style="width: -webkit-fill-available;">Delete descriptor</button></td></tr></table>
+					<div id="bleServerTree" ></div>
 				</div>				
 				<div id="bleTabsJSONTab">
 					<div>
@@ -415,7 +426,7 @@
 			</div>
 		</div>
 	</div>
-
+<!-- TODO: add i2c dialog to each active i2c device to read/write register -->
 	<!-- ------- -->
 	<!-- DIALOGS -->
 	<!-- ------- -->

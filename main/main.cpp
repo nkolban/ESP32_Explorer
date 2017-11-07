@@ -12,11 +12,16 @@
 #include <string>
 #include "ESP32Explorer.h"
 #include "bt.h"
+#include "BootWiFi.h"
 
+//#define BOOTWIFI
+
+#ifndef BOOTWIFI
 static const char WIFI_SSID[]     = "sweetie";
 static const char WIFI_PASSWORD[] = "l16wint!";
 //static const char *WIFI_SSID     = "Orange-8F54";
 //static const char *WIFI_PASSWORD = "33413006";
+#endif
 
 extern "C" {
 	int app_main(void);
@@ -38,10 +43,14 @@ class ESP32_ExplorerTask: public Task {
  */
 class WiFiTask: public Task {
 	void run(void *data) override {
-
+#ifdef BOOTWIFI
+		BootWiFi boot = BootWiFi();
+		boot.boot();
+#else
 		WiFi *pWifi = new WiFi();  // Can't delete at the end of the task.
 		pWifi->setIPInfo("192.168.1.99", "192.168.1.1", "255.255.255.0");
 		pWifi->connectAP(WIFI_SSID, WIFI_PASSWORD);
+#endif
 		ESP32_ExplorerTask *pESP32_ExplorerTask = new ESP32_ExplorerTask();
 		pESP32_ExplorerTask->setStackSize(6000);
 		pESP32_ExplorerTask->start();
@@ -62,9 +71,7 @@ void task_webserver(void* ignore) {
  * @brief Main entry point.
  */
 int app_main(void) {
-	esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
-  	ESP_LOGD("MAIN", "%d", xPortGetFreeHeapSize());
-//Memory::init(100);
+//Memory::init(300);
 	task_webserver(nullptr);
 	return 0;
 } // app_main
