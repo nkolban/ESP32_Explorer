@@ -5,6 +5,7 @@ $(function() {
 	const FILE_DIRECTORY = 2; // Type of file that is a directory
 	const FILE_REGULAR   = 1; // Type of file that is a regular file
 	var bleClient = null;
+	var bleServerNode = null;
 	
 	function getFileNameDialog() {
 		fileNameDeferred = jQuery.Deferred();
@@ -332,7 +333,52 @@ $(function() {
 			"connect" : bleClient.node.id
 		})
 	});
-
+// BLE SERVER functions >>>
+	$("#bleCreateServerButton").button().click(function(){
+		postData("/ESP32/BLE/SERVER")
+	});
+	
+	$("#bleAddServiceButton").button().click(function(){
+		postData("/ESP32/BLE/SERVER/SERVICE", function(data) {
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
+			$('#bleServerTree').jstree('create_node', "#", data, "last", false, false);
+		},  
+		{
+			"UUID": $("#bleFormData").val()
+		})
+	});
+	
+	$("#bleAddCharacteristicButton").button().click(function(){
+		postData("/ESP32/BLE/SERVER/CHARACTERISTIC", function(data) {
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
+			$('#bleServerTree').jstree('create_node', bleServerNode.node, data, "last", false, false);
+		}, 
+		{
+			"UUID": $("#bleFormData").val(),
+			"serviceUUID": bleServerNode.node.id
+		})
+	});
+	
+	$("#bleAddDescriptorButton").button().click(function(){
+		postData("/ESP32/BLE/SERVER/DESCRIPTOR", function(data) {
+			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
+			$('#bleServerTree').jstree('create_node', bleServerNode.node, data, "last", false, false);
+		}, 
+		{
+			"UUID": $("#bleFormData").val(),
+			"characteristicUUID": bleServerNode.node.id
+		})
+	});
+	
+	$("#bleAdvertiseButton").button().click(function(){
+		getData("/ESP32/BLE/SERVER/START")
+	});
+	
+	$("#bleStopAdvertisingButton").button().click(function(){
+		getData("/ESP32/BLE/SERVER/STOP")
+	});
+	
+// BLE SERVER functions <<<
 	$("#gpioRefreshButton").button().click(function() {
 		getData("/ESP32/GPIO", function(data) {
 			$("#gpioJsonText").val(JSON.stringify(data, null, "  "));
@@ -578,6 +624,10 @@ $(function() {
 	$('#bleTree').on('select_node.jstree', function(node, selected, event){
 		bleClient = selected;
 	});
+	
+	$('#bleServerTree').on('select_node.jstree', function(node, selected, event){
+		bleServerNode = selected;
+	});
 		
 	$('#bleTree').jstree({
 	  "core" : {
@@ -604,6 +654,38 @@ $(function() {
 	    },
 	    "characteristic" : {
 	      "valid_children" : []
+	    }
+	  },
+	  "plugins" : []
+	});
+
+	$('#bleServerTree').jstree({
+	  "core" : {
+	  	"multiple":false,
+	    "animation" : 0,
+	    "check_callback" : true,
+	    "themes" : { "stripes" : true }
+	  },
+	  "types" : {
+	    "#" : {
+	      "max_children" : 10,
+	      "max_depth" : 4,
+	      "valid_children" : ["root"]
+	    },
+	    "root" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["default", "service"]
+	    },
+	    "default" : {
+	      "valid_children" : ["default", "service"]
+	    },
+	    "service" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["characteristic"]
+	    },
+	    "characteristic" : {
+	      "icon" : "/static/3.3.4/assets/images/tree_icon.png",
+	      "valid_children" : ["default"]
 	    }
 	  },
 	  "plugins" : []
@@ -640,5 +722,4 @@ $(function() {
 	  },
 	  "plugins" : []
 	});
-
 });

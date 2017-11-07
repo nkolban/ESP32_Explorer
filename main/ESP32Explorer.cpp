@@ -60,7 +60,7 @@ static void handle_REST_SYSTEM(HttpRequest* pRequest, HttpResponse* pResponse) {
 	JsonObject obj = SYSTEM_JSON();
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
-  	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
+  	ESP_LOGE(LOG_TAG, "%d, largest: %d", xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize());
 } // handle_REST_GPIO
 
 
@@ -425,11 +425,72 @@ static void handle_REST_BLE_CLIENT_CONNECT(HttpRequest* pRequest, HttpResponse* 
 	JSON::deleteArray(obj);
 } // handle_REST_BLE_CLIENT_SCAN
 
-static void handle_REST_BLE_SERVER_START(HttpRequest* pRequest, HttpResponse* pResponse) {
+static void handle_REST_BLE_SERVER_CREATE(HttpRequest* pRequest, HttpResponse* pResponse) {
+	g_pBLEExplorer->createServer("Esp32");
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "text/plain");
+	pResponse->sendData("create server");
+}
+static void handle_REST_BLE_SERVER_DELETE(HttpRequest* pRequest, HttpResponse* pResponse) {
+	g_pBLEExplorer->deleteServer();
+}
+static void handle_REST_BLE_SERVER_START_ADV(HttpRequest* pRequest, HttpResponse* pResponse) {
+	g_pBLEExplorer->startAdvertising();
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "text/plain");
+	pResponse->sendData("start adv");
+}
+static void handle_REST_BLE_SERVER_STOP_ADV(HttpRequest* pRequest, HttpResponse* pResponse) {
+	g_pBLEExplorer->stopAdvertising();
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "text/plain");
+	pResponse->sendData("stop adv");
 }
 static void handle_REST_BLE_SERVER_ADD_SERVICE(HttpRequest* pRequest, HttpResponse* pResponse) {
+	JsonObject obj = JSON::createObject();
+	std::map<std::string, std::string> parts = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		BLEUUID uuid = BLEUUID::fromString(parts.at("UUID").c_str());
+		obj = g_pBLEExplorer->addService(uuid);
+	}
+
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
 }
 static void handle_REST_BLE_SERVER_GET_SERVICES(HttpRequest* pRequest, HttpResponse* pResponse) {
+}
+static void handle_REST_BLE_SERVER_ADD_CHARACTERISTIC(HttpRequest* pRequest, HttpResponse* pResponse) {
+	JsonObject obj = JSON::createObject();
+	std::map<std::string, std::string> parts = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		BLEUUID uuid = BLEUUID::fromString(parts.at("UUID").c_str());
+		BLEUUID service = BLEUUID::fromString(parts.at("serviceUUID").c_str());
+		obj = g_pBLEExplorer->addCharacteristic(uuid, service);
+	}
+
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
+}
+
+static void handle_REST_BLE_SERVER_GET_(HttpRequest* pRequest, HttpResponse* pResponse) {
+}
+static void handle_REST_BLE_SERVER_ADD_DESCRIPTOR(HttpRequest* pRequest, HttpResponse* pResponse) {
+	JsonObject obj = JSON::createObject();
+	std::map<std::string, std::string> parts = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		BLEUUID uuid = BLEUUID::fromString(parts.at("UUID").c_str());
+		BLEUUID characteristic = BLEUUID::fromString(parts.at("characteristicUUID").c_str());
+		obj = g_pBLEExplorer->addDescriptor(uuid, characteristic);
+	}
+
+	pResponse->addHeader("access-control-allow-origin", "*");
+	pResponse->addHeader("Content-Type", "application/json");
+	pResponse->sendData(obj.toString());
+}
+
+static void handle_REST_BLE_SERVER_GET_DESCRIPTOR(HttpRequest* pRequest, HttpResponse* pResponse) {
 }
 
 class TFTPTask : public Task {
@@ -479,17 +540,32 @@ void ESP32_Explorer::start() {
 	 pHttpServer->addPathHandler("POST",   "/ESP32/FILE",                  handle_REST_FILE_POST);
 	 pHttpServer->addPathHandler("DELETE", "/ESP32/FILE",                  handle_REST_FILE_DELETE);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/SYSTEM",                handle_REST_SYSTEM);
+	 // I2C
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/COMMAND/READ",      handle_REST_I2C_COMMAND_READ);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/COMMAND/WRITE",     handle_REST_I2C_COMMAND_WRITE);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/INIT",              handle_REST_I2C_INIT);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/I2C/SCAN",              handle_REST_I2C_SCAN);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/I2C/DEINIT",            handle_REST_I2C_CLOSE);
+	 // BLE CLIENT
 	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/CLIENT/SCAN",       handle_REST_BLE_CLIENT_SCAN);
 	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/CLIENT/CONNECT",    handle_REST_BLE_CLIENT_CONNECT);
-	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER",   		   handle_REST_BLE_SERVER_START);
-	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/SERVICE",    handle_REST_BLE_SERVER_ADD_SERVICE);
-	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER/SERVICES",   handle_REST_BLE_SERVER_GET_SERVICES);
+	 // BLE SERVER
+	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER",   		   handle_REST_BLE_SERVER_CREATE);
+	 //pHttpServer->addPathHandler("DELETE", "/ESP32/BLE/SERVER",   		   handle_REST_BLE_SERVER_DELETE);
+	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER/SERVICE",    handle_REST_BLE_SERVER_ADD_SERVICE);
+	 pHttpServer->addPathHandler("DELETE", "/ESP32/BLE/SERVER/SERVICE",    handle_REST_BLE_SERVER_ADD_SERVICE);
+	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/SERVICES",   handle_REST_BLE_SERVER_GET_SERVICES);
+	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER/CHARACTERISTIC",    handle_REST_BLE_SERVER_ADD_CHARACTERISTIC);
+	 pHttpServer->addPathHandler("DELETE", "/ESP32/BLE/SERVER/CHARACTERISTIC",    handle_REST_BLE_SERVER_ADD_SERVICE);
+	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/CHARACTERISTICS",   handle_REST_BLE_SERVER_GET_SERVICES);
+	 pHttpServer->addPathHandler("POST",   "/ESP32/BLE/SERVER/DESCRIPTOR",    handle_REST_BLE_SERVER_ADD_DESCRIPTOR);
+	 pHttpServer->addPathHandler("DELETE", "/ESP32/BLE/SERVER/DESCRIPTOR",    handle_REST_BLE_SERVER_ADD_SERVICE);
+	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/DESCRIPTORS",   handle_REST_BLE_SERVER_GET_SERVICES);
+	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/START",    	handle_REST_BLE_SERVER_START_ADV);
+	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/STOP",   		handle_REST_BLE_SERVER_STOP_ADV);
+
 	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
 	 pHttpServer->start(80); // Start the WebServer listening on port 80.
-	  	ESP_LOGE(LOG_TAG, "%d", xPortGetFreeHeapSize());
+	  	ESP_LOGE(LOG_TAG, "%d, minimum ever: %d", xPortGetFreeHeapSize(), xPortGetMinimumEverFreeHeapSize());
 } // start
+
