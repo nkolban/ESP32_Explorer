@@ -10,12 +10,14 @@
 #include <stdlib.h>
 #include <JSON.h>
 #include <I2C.h>
+#include <stdio.h>
 #include <sstream>
 
 //static const char *LOG_TAG = "I2C_SCAN";
 
 /**
  * @begin Scan the I2C ports.
+ * @return A JsonObject that describes the I2C scan.
  */
 JsonObject I2C_SCAN_JSON() {
 	JsonObject obj    = JSON::createObject();
@@ -29,7 +31,7 @@ JsonObject I2C_SCAN_JSON() {
 	I2C i2c;
 //	i2c.init(0);
 
-	for (i=3; i< 0x78; i++) {   // Loop over each of the possible I2C addresses.
+	for (i=3; i<0x78; i++) {   // Loop over each of the possible I2C addresses.
 		bool slavePresent = i2c.slavePresent(i);
 
 		if (i%16 == 0) {

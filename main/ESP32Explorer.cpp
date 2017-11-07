@@ -38,6 +38,7 @@ extern JsonObject I2C_READ(std::map<std::string, std::string> parts);
 extern JsonObject I2C_WRITE(std::map<std::string, std::string> parts);
 extern JsonObject I2C_SCAN_JSON();
 
+
 static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "handleTest called");
 	ESP_LOGD(LOG_TAG, "Path: %s" ,pRequest->getPath().c_str());
@@ -51,6 +52,7 @@ static void handleTest(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, "Body: %s", pRequest->getBody().c_str());
 	pResponse->sendData("hello!");
 } // handleTest
+
 
 static void handle_REST_SYSTEM(HttpRequest* pRequest, HttpResponse* pResponse) {
 	ESP_LOGD(LOG_TAG, "handle_REST_SYSTEM");
@@ -355,6 +357,7 @@ static void handle_REST_I2C_INIT(HttpRequest *pRequest, HttpResponse *pResponse)
 	JSON::deleteObject(obj);
 } // handle_REST_I2C_INIT
 
+
 static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> delete_I2C");
 	std::map<std::string, std::string> parts = pRequest->parseForm();
@@ -371,6 +374,7 @@ static void handle_REST_I2C_CLOSE(HttpRequest *pRequest, HttpResponse *pResponse
 	//JSON::deleteObject(obj);
 } // handle_REST_I2C_CLOSE
 
+
 static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
 	pResponse->addHeader("access-control-allow-origin", "*");
@@ -379,6 +383,7 @@ static void handle_REST_I2C_SCAN(HttpRequest *pRequest, HttpResponse *pResponse)
 	pResponse->sendData(obj.toString());
 	JSON::deleteObject(obj);
 } // handle_REST_I2C_SCAN
+
 
 static void handle_REST_I2C_COMMAND_READ(HttpRequest *pRequest, HttpResponse *pResponse) {
 	ESP_LOGD(LOG_TAG, ">> init_I2C");
