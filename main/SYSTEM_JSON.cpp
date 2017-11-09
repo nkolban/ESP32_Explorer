@@ -11,6 +11,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
+#include <strings.h>
 
 const static char LOG_TAG[] = "SYSTEM_JSON";
 /**
@@ -150,10 +151,8 @@ JsonObject SYSTEM_JSON() {
 	TaskStatus_t *pTaskStatusArray = new TaskStatus_t[taskCount];
 	assert(pTaskStatusArray != nullptr);
 	taskCount = ::uxTaskGetSystemState(pTaskStatusArray, taskCount, nullptr);
-	std::sort(pTaskStatusArray, pTaskStatusArray+taskCount, [](TaskStatus_t a, TaskStatus_t b) {
-		std::string n1 = std::string(a.pcTaskName);
-		std::string n2 = std::string(b.pcTaskName);
-		return n1.compare(n2) < 0;
+	std::sort(pTaskStatusArray, pTaskStatusArray+taskCount, [](const TaskStatus_t& a, const TaskStatus_t& b) {
+		return strcasecmp(a.pcTaskName, b.pcTaskName) < 0;
 	});
 
 	JsonArray arr2 = JSON::createArray();
