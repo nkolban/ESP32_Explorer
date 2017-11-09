@@ -255,6 +255,7 @@ $(function() {
 				$("#coresSystemGeneralTab").text(data.cores);
 				$("#revisionSystemGeneralTab").text(data.revision);
 				$("#freeHeapSystemGeneralTab").text(data.freeHeap);
+				$("#minimumFreeHeapSystemGeneralTab").text(data.minimumFreeHeap);
 				$("#timeSystemGeneralTab").text(data.time);	
 				$("#taskCountFreeRTOSTab").text(data.taskCount);
 				
