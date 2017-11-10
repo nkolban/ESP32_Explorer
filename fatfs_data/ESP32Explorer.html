@@ -11,6 +11,23 @@
 <script src="jQuery-File-Upload-9.18.0/js/jquery.fileupload.js"></script>
 <script src="ESP32Explorer.js"></script>
 <style>
+
+.service {
+	width: 32px;
+	height: 32px;
+	background-image: url('images/in.png');
+	margin: 0;
+	padding: 0;
+}
+
+.characteristic {
+	width: 16px;
+	height: 16px;
+	background-image: url('images/out.png');
+	margin: 0;
+	padding: 0;
+}
+
 .flexHoriz {
 	display: flex;
 }
@@ -74,6 +91,8 @@
 	margin: 0;
 	padding: 0;
 }
+
+
 </style>
 </head>
 <body>
@@ -393,9 +412,10 @@
 					<tr><td><button id="bleAddServiceButton" style="width: -webkit-fill-available;">Add service</button></td>
 					<td><button id="bleAddCharacteristicButton" style="width: -webkit-fill-available;">Add characteristic</button></td>
 					<td><button id="bleAddDescriptorButton" style="width: -webkit-fill-available;">Add descriptor</button></td></tr>
-					<tr><td><button id="bleDeleteServiceButton" style="width: -webkit-fill-available;">Delete service</button></td>
+				<!--	<tr><td><button id="bleDeleteServiceButton" style="width: -webkit-fill-available;">Delete service</button></td>
 					<td><button id="bleDeleteCharacteristicButton" style="width: -webkit-fill-available;">Delete characteristic</button></td>
-					<td><button id="bleDeleteDescriptorButton" style="width: -webkit-fill-available;">Delete descriptor</button></td></tr></table>
+					<td><button id="bleDeleteDescriptorButton" style="width: -webkit-fill-available;">Delete descriptor</button></td></tr>-->
+					</table>
 					<div id="bleServerTree" ></div>
 				</div>				
 				<div id="bleTabsJSONTab">
@@ -415,11 +435,11 @@
 			<div class="ui-widget">
 				<span>Root Path:</span> <input id="rootPathText" type="text" value="/spiflash/dir1">
 				<div id="fileTree" style="width: 500px; height: 500px; border: 1px solid; margin-top: 8px;"></div>
-				<p>
+				
 				<form id="fileUploadForm" method="POST" enctype="multipart/form-data" action="http://192.168.1.99/ESP32/FILE">
-					<input type="file" name="myfile"> <input type="submit" name="submit" value="Upload Now">
+					<input type="file" name="myfile"> <input type="submit" id="submit" value="Upload Now">
 				</form>
-				</p>
+				
 			</div>
 			<div style="margin-top: 8px;">
 				<button id="fileSystemRefreshButton">Refresh</button>

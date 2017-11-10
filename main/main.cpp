@@ -17,10 +17,10 @@
 //#define BOOTWIFI
 
 #ifndef BOOTWIFI
-static const char WIFI_SSID[]     = "sweetie";
-static const char WIFI_PASSWORD[] = "l16wint!";
-//static const char *WIFI_SSID     = "Orange-8F54";
-//static const char *WIFI_PASSWORD = "33413006";
+//static const char WIFI_SSID[]     = "sweetie";
+//static const char WIFI_PASSWORD[] = "l16wint!";
+static const char *WIFI_SSID     = "Orange-8F54";
+static const char *WIFI_PASSWORD = "33413006";
 #endif
 
 extern "C" {
@@ -72,6 +72,7 @@ void task_webserver(void* ignore) {
  */
 int app_main(void) {
 //Memory::init(300);
+	esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);  //FIXME waiting for response from esp-idf issue
 	task_webserver(nullptr);
 	return 0;
 } // app_main

@@ -11,6 +11,7 @@
 #include <BLEDevice.h>
 #include "Task.h"
 #include "Memory.h"
+#include <sstream>
 
 #include "BLEClient.h"
 static const char* LOG_TAG = "BLEExplorer";
@@ -37,7 +38,7 @@ JsonArray BLEExplorer::scan() {
 	}
 	BLEScan* pBLEScan = BLEDevice::getScan();
 	pBLEScan->setActiveScan(true);
-	BLEScanResults scanResults = pBLEScan->start(5);
+	BLEScanResults scanResults = pBLEScan->start(1);
 	JsonObject obj = JSON::createObject();
 	JsonArray arr = JSON::createArray();
 	arr.addString("BLE devices");
@@ -66,13 +67,11 @@ JsonArray BLEExplorer::connect(std::string _addr){
 //	Memory::startTraceAll();
 	JsonArray arr = JSON::createArray();
 	for (auto it=pRemoteServices->begin(); it!=pRemoteServices->end(); ++it) {
-		std::map<std::string, BLERemoteCharacteristic*> *pRemoteCharacteristics = it->second->getCharacteristics();
-		arr.addObject(enumerateCharacteristics(it->second, pRemoteCharacteristics, _addr));
+		std::map<uint16_t, BLERemoteCharacteristic*> pRemoteCharacteristics;
+		it->second->getCharacteristics(&pRemoteCharacteristics);
+		arr.addObject(enumerateCharacteristics(it->second, &pRemoteCharacteristics, _addr));
 	}
 
-
-//	Memory::stopTrace();
-//	Memory::dump();
 	pClient->disconnect();
 /*
 	free(pClient);
@@ -83,31 +82,55 @@ JsonArray BLEExplorer::connect(std::string _addr){
 /*
  * @brief Enumerate devices
  */
-JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){ //TODO expandable complex info about device advertising
+JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){
 	JsonArray arr = JSON::createArray();
 	JsonObject obj = JSON::createObject();
 	obj.setString("id", device.getAddress().toString());
 	obj.setString("parent", "#");
-	obj.setString("text", device.getName());
+	obj.setString("text", device.getName() == ""? "N/A":device.getName());
 	JsonObject state = JSON::createObject();
 	state.setBoolean("opened", true);
 	obj.setObject("state", state);
 	JsonObject obj2 = JSON::createObject();
 	//obj2.setString("id", device.getAddress().toString());
-	obj2.setString("parent", device.getAddress().toString());
+	//obj2.setString("parent", device.getAddress().toString());
 	obj2.setString("text", "Address - " + device.getAddress().toString());
-	obj2.setBoolean("children", false);
+	//obj2.setBoolean("children", false);
 	arr.addObject(obj2);
-	//TODO add all this info
-	/*
-	bool		isAdvertisingService(BLEUUID uuid);
-	bool        haveAppearance();
-	bool        haveManufacturerData();
-	bool        haveName();
-	bool        haveRSSI();
-	bool        haveServiceUUID();
-	bool        haveTXPower();
-	 */
+	if(device.haveManufacturerData()){
+		obj2 = JSON::createObject();
+		obj2.setString("text", "Manufacturer - " + device.getManufacturerData());
+		arr.addObject(obj2);
+	}
+	std::stringstream ss;
+	if(device.haveAppearance()){
+		ss << "Appearance - " << device.getAppearance();
+		obj2 = JSON::createObject();
+		obj2.setString("text", ss.str());
+		arr.addObject(obj2);
+	}
+	if(device.haveRSSI()){
+		ss.str("");
+		ss << "RSSI - " <<  device.getRSSI();
+		obj2 = JSON::createObject();
+		obj2.setString("text", ss.str());
+		arr.addObject(obj2);
+	}
+	if(device.haveTXPower()){
+		ss.str("");
+		ss << "TX power - " << device.getTXPower();
+		obj2 = JSON::createObject();
+		obj2.setString("text", ss.str());
+		arr.addObject(obj2);
+	}
+	if(device.haveServiceUUID()){
+		ss.str("");
+		ss << "Services - " << device.getAddress().toString();
+		obj2 = JSON::createObject();
+		obj2.setString("text", ss.str());
+		arr.addObject(obj2);
+	}
+
 
 	obj.setArray("children", arr);
 
@@ -116,21 +139,25 @@ JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){ //TODO exp
 /*
  * @brief Enumerate characteristics from given service
  */
-JsonObject BLEExplorer::enumerateCharacteristics(BLERemoteService *p, std::map<std::string, BLERemoteCharacteristic*> *charact, std::string _addr){
+JsonObject BLEExplorer::enumerateCharacteristics(BLERemoteService *pService, std::map<uint16_t, BLERemoteCharacteristic*> *characteristicMap, std::string _addr){
 	JsonObject obj = JSON::createObject();
 	JsonArray arr = JSON::createArray();
+	char tmp;
+	itoa(pService->getHandle(), &tmp, 16);
 
-	//obj.setString("id", p->getUUID().toString());  // todo add short uuid if service !UNKNOWN
-	obj.setString("text", BLEUtils::gattServiceToString(p->getUUID().getNative()->uuid.uuid32) + " Service: " + p->getUUID().toString());
+	obj.setString("id", &tmp);  // todo service's handle
+	obj.setString("text", BLEUtils::gattServiceToString(pService->getUUID().getNative()->uuid.uuid32) + " Service: " + pService->getUUID().toString());
 	obj.setString("icon", "service");
 	JsonObject state = JSON::createObject();
 	state.setBoolean("opened", true);
 	obj.setObject("state", state);
+	obj.setString("parent", _addr);
 
-	for (auto it=charact->begin(); it!=charact->end(); ++it) {  // TODO add descriptors enumerator, add short uuid if characteristic !UNKNOWN
+	for (auto it=characteristicMap->begin(); it!=characteristicMap->end(); ++it) {  // TODO add descriptors enumerator, add short uuid if characteristic !UNKNOWN
 		JsonObject ch = JSON::createObject();
-		//ch.setString("id", it->second->getUUID().toString());
-		ch.setString("text", BLEUtils::gattCharacteristicUUIDToString(p->getUUID().getNative()->uuid.uuid32) + " Characteristic: " + it->second->getUUID().toString());
+		itoa(it->second->getHandle(), &tmp, 16);
+		ch.setString("id", &tmp);  // characteristic's handle
+		ch.setString("text", BLEUtils::gattCharacteristicUUIDToString(it->second->getUUID().getNative()->uuid.uuid16) + " Characteristic: " + it->second->getUUID().toString());
 		ch.setString("icon", "characteristic");
 		arr.addObject(ch);
 	}
@@ -146,41 +173,53 @@ void BLEExplorer::createServer(std::string name){
 	mServices = new BLEServiceMap();
 }
 
-JsonObject BLEExplorer::addService(BLEUUID _uuid){
-
-	BLEService *pservice = pServer->createService(_uuid.toString());
-	mServices->setByUUID(pservice->getUUID().toString(), pservice);
+void BLEExplorer::startService(uint16_t handle){
+	BLEService *pservice = mServices->getByHandle(handle);
 	pservice->start();
-	JsonObject obj = JSON::createObject();
-	obj.setString("icon", "service");
-	obj.setString("id", pservice->getUUID().toString());
-	obj.setString("parent", "#");
-	obj.setString("text", BLEUtils::gattServiceToString(pservice->getUUID().getNative()->uuid.uuid32) + " Service: " + pservice->getUUID().toString());
+}
 
+JsonObject BLEExplorer::addService(BLEUUID _uuid){
+	JsonObject obj = JSON::createObject();
+
+	char ptr[33];
+	BLEService *pservice = pServer->createService(_uuid);
+	if(pservice != nullptr){
+		mServices->setByHandle(pservice->getHandle(), pservice);
+		pservice->start();
+		obj.setString("icon", "service");
+		itoa(pservice->getHandle(), ptr, 16);
+		obj.setString("handle", ptr);
+		obj.setString("parent", "#");
+		obj.setString("text", BLEUtils::gattServiceToString(pservice->getUUID().getNative()->uuid.uuid16) + " Service: " + pservice->getUUID().toString());
+	}
 	return obj;
 }
 
-JsonObject BLEExplorer::addCharacteristic(BLEUUID uuid, BLEUUID service){
-	BLEService *pservice = mServices->getByUUID(service);
-	BLECharacteristic *charact = pservice->createCharacteristic(BLEUUID(uuid), {BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY});
-	mCharacteristics->setByUUID(charact->getUUID().toString(), charact);
-	pservice->start();
+JsonObject BLEExplorer::addCharacteristic(BLEUUID uuid, uint16_t service){
+	char ptr[33];
+	BLEService *pservice = mServices->getByHandle(service);
+	ESP_LOGE(LOG_TAG, "ADD: %d", pservice->getHandle());
+	BLECharacteristic *charact = pservice->createCharacteristic(BLEUUID(uuid), {BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE});
 	charact->setValue("Private name");
 	JsonObject obj = JSON::createObject();
 	obj.setString("icon", "characteristic");
-	obj.setString("id", charact->getUUID().toString());
-	obj.setString("parent", pservice->getUUID().toString());
-	obj.setString("text", BLEUtils::gattCharacteristicUUIDToString(uuid.getNative()->uuid.uuid32) + " Characteristic: " + charact->getUUID().toString());
+	itoa(charact->getHandle(), ptr, 16);
+	obj.setString("handle", ptr);
+	itoa(service, ptr, 16);
+	obj.setString("parent", ptr);
+	obj.setString("text", BLEUtils::gattCharacteristicUUIDToString(charact->getUUID().getNative()->uuid.uuid16) + " Characteristic: " + charact->getUUID().toString());
 	return obj;
 }
 
-JsonObject BLEExplorer::addDescriptor(BLEUUID uuid, BLEUUID charact){
-	BLECharacteristic *pcharact = mCharacteristics->getByUUID(BLEUUID(charact));
+JsonObject BLEExplorer::addDescriptor(BLEUUID uuid, uint16_t charact){
+	char ptr[33];
+	BLECharacteristic *pcharact = mCharacteristics->getByHandle(charact);
 	BLEDescriptor descr = BLEDescriptor(uuid);
 	pcharact->addDescriptor(&descr);
 	JsonObject obj = JSON::createObject();
 	obj.setString("icon", "descriptor");
-	obj.setString("id", descr.getUUID().toString());
+	itoa(descr.getHandle(), ptr, 16);
+	obj.setString("handle", ptr);
 	obj.setString("parent", pcharact->getUUID().toString());
 	obj.setString("text", BLEUtils::gattDescriptorUUIDToString(uuid.getNative()->uuid.uuid32) + " Descriptor: " + uuid.toString());
 	return obj;

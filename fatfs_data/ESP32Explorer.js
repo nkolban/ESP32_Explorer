@@ -325,9 +325,14 @@ $(function() {
 	$("#bleConnectButton").button().click(function(){
 		var sel = bleClient;
 		postData("/ESP32/BLE/CLIENT/CONNECT", function(data) {
+			//obj = JSON.parse(data);
+			//len = Object.keys(obj.shareInfo[0]).length;
 			$("#bleJsonText").val(JSON.stringify(data, null, "  "));
-			$('#bleServicesTree').jstree(true).settings.core.data = data;
-			$('#bleServicesTree').jstree(true).refresh();
+			for(var i in data){
+				$('#bleTree').jstree('create_node', bleClient.node, data[i], "last", false, false);
+			}
+		//	$('#bleServicesTree').jstree(true).settings.core.data = data;
+		//	$('#bleServicesTree').jstree(true).refresh();
 		}, 
 		{
 			"connect" : bleClient.node.id
@@ -355,7 +360,7 @@ $(function() {
 		}, 
 		{
 			"UUID": $("#bleFormData").val(),
-			"serviceUUID": bleServerNode.node.id
+			"serviceUUID": bleServerNode.node.original.handle
 		})
 	});
 	
@@ -366,7 +371,7 @@ $(function() {
 		}, 
 		{
 			"UUID": $("#bleFormData").val(),
-			"characteristicUUID": bleServerNode.node.id
+			"characteristicUUID": bleServerNode.node.original.handle
 		})
 	});
 	
@@ -375,7 +380,10 @@ $(function() {
 	});
 	
 	$("#bleStopAdvertisingButton").button().click(function(){
-		getData("/ESP32/BLE/SERVER/STOP")
+		postData("/ESP32/BLE/SERVER/STOP", null, 
+		{
+			"handle": bleServerNode.node.original.handle
+		})
 	});
 	
 // BLE SERVER functions <<<
@@ -460,7 +468,19 @@ $(function() {
 			}
 		}
 	});
-	
+	$("submit").on('click', function(){
+		evt.preventdefault();/*
+		postData("/ESP32/FILE", 
+		function(data){
+			
+			debugger;
+		}, 
+		{
+			
+		});*/
+		console.log('submit');
+	});
+/*	
 	$("#fileUploadForm").fileupload({
 		add: function(e, data) {
 
@@ -481,7 +501,7 @@ $(function() {
 			buildFileSystemTree(path);	
 		}
 	});
-	
+	*/
 	$("#gpioDialog").dialog({
 		autoOpen: false,
 		modal: true,
