@@ -446,7 +446,14 @@ static void handle_REST_BLE_SERVER_START_ADV(HttpRequest* pRequest, HttpResponse
 	pResponse->sendData("start adv");
 }
 static void handle_REST_BLE_SERVER_STOP_ADV(HttpRequest* pRequest, HttpResponse* pResponse) {
-	g_pBLEExplorer->stopAdvertising();
+	JsonObject obj = JSON::createObject();
+	std::map<std::string, std::string> parts = pRequest->parseForm();
+	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
+		uint16_t service = strtoul(parts.at("handle").c_str(), NULL, 16);
+		g_pBLEExplorer->startService(service);
+	}
+
+	//g_pBLEExplorer->stopAdvertising();
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "text/plain");
 	pResponse->sendData("stop adv");
@@ -470,7 +477,7 @@ static void handle_REST_BLE_SERVER_ADD_CHARACTERISTIC(HttpRequest* pRequest, Htt
 	std::map<std::string, std::string> parts = pRequest->parseForm();
 	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
 		BLEUUID uuid = BLEUUID::fromString(parts.at("UUID").c_str());
-		BLEUUID service = BLEUUID::fromString(parts.at("serviceUUID").c_str());
+		uint16_t service = strtoul(parts.at("serviceUUID").c_str(), NULL, 16);
 		obj = g_pBLEExplorer->addCharacteristic(uuid, service);
 	}
 
@@ -486,7 +493,7 @@ static void handle_REST_BLE_SERVER_ADD_DESCRIPTOR(HttpRequest* pRequest, HttpRes
 	std::map<std::string, std::string> parts = pRequest->parseForm();
 	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
 		BLEUUID uuid = BLEUUID::fromString(parts.at("UUID").c_str());
-		BLEUUID characteristic = BLEUUID::fromString(parts.at("characteristicUUID").c_str());
+		uint16_t characteristic = strtoul(parts.at("characteristicUUID").c_str(), NULL, 16);
 		obj = g_pBLEExplorer->addDescriptor(uuid, characteristic);
 	}
 
@@ -567,7 +574,7 @@ void ESP32_Explorer::start() {
 	 pHttpServer->addPathHandler("DELETE", "/ESP32/BLE/SERVER/DESCRIPTOR",    handle_REST_BLE_SERVER_ADD_SERVICE);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/DESCRIPTORS",   handle_REST_BLE_SERVER_GET_SERVICES);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/START",    	handle_REST_BLE_SERVER_START_ADV);
-	 pHttpServer->addPathHandler("GET",    "/ESP32/BLE/SERVER/STOP",   		handle_REST_BLE_SERVER_STOP_ADV);
+	 pHttpServer->addPathHandler("POST",    "/ESP32/BLE/SERVER/STOP",   		handle_REST_BLE_SERVER_STOP_ADV);
 
 	 //pHttpServer->setWebSocketHandlerFactory(new MyWebSocketHandlerFactory());
 	 pHttpServer->start(80); // Start the WebServer listening on port 80.

@@ -141,7 +141,7 @@ JsonObject SYSTEM_JSON() {
 	obj.setBoolean("hasBT", chipInfo.features & CHIP_FEATURE_BT);
 	obj.setString("espVersion", System::getIDFVersion());
 	obj.setInt("freeHeap", System::getFreeHeapSize());
-	obj.setInt("minimumFreeHeap", System::getMinimumFreeHeapSize());
+	//obj.setInt("minimumFreeHeap", System::getMinimumFreeHeapSize());
 	struct timeval tv;
 	gettimeofday(&tv, nullptr);
 	obj.setDouble("time", tv.tv_sec + tv.tv_usec / 1000000.0);
