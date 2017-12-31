@@ -18,7 +18,7 @@ public:
 	JsonArray scan();
 	JsonArray connect(std::string addr);
 	JsonObject enumerateDevices(BLEAdvertisedDevice device);
-	JsonArray enumerateCharacteristics(std::map<BLERemoteCharacteristic*, std::string> *characteristicMap);
+	JsonArray enumerateCharacteristics(std::map<std::string, BLERemoteCharacteristic*> *characteristicMap);
 	JsonArray enumerateDescriptors(std::map<std::string, BLERemoteDescriptor*> *descriptorsMap);
 
 	// --- SERVER --- //

@@ -201,7 +201,8 @@ static void processForm(HttpRequest* pRequest, HttpResponse* pResponse) {
 	//pResponse->sendData(std::string((char*)selectAP_html, selectAP_html_len));
 	pResponse->close();
 	FreeRTOS::sleep(500);
-	GeneralUtils::restart();
+	//GeneralUtils::restart();
+	esp_restart();
 	ESP_LOGD(LOG_TAG, "<< processForm");
 } // processForm
 

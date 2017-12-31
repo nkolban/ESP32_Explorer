@@ -78,7 +78,7 @@ JsonArray BLEExplorer::connect(std::string _addr){
 		state.setBoolean("opened", true);
 		obj.setObject("state", state);
 		obj.setString("parent", _addr);
-		std::map<BLERemoteCharacteristic*, std::string> *pChars = it->second->getCharacteristics();
+		std::map<std::string, BLERemoteCharacteristic*> *pChars = it->second->getCharacteristics();
 		obj.setArray("children", enumerateCharacteristics(pChars));
 		arr.addObject(obj);
 	}
@@ -150,7 +150,7 @@ JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){
 /*
  * @brief Enumerate characteristics from given service
  */
-JsonArray BLEExplorer::enumerateCharacteristics(std::map<BLERemoteCharacteristic*, std::string> *characteristicMap){
+JsonArray BLEExplorer::enumerateCharacteristics(std::map<std::string, BLERemoteCharacteristic*> *characteristicMap){
 
 	//std::map<uint16_t, BLERemoteCharacteristic*> *characteristicMap = pService;
 	//pService->getCharacteristics(characteristicMap);
@@ -161,17 +161,17 @@ JsonArray BLEExplorer::enumerateCharacteristics(std::map<BLERemoteCharacteristic
 		JsonObject ch = JSON::createObject();
 		JsonObject val = JSON::createObject();
 		JsonArray ar = JSON::createArray();
-		itoa(it->first->getHandle(), tmp, 16);
+		itoa(it->second->getHandle(), tmp, 16);
 		ch.setString("id", tmp);  // characteristic's handle
 
-		std::string str = it->first->canRead()?"R":"";
-		str += it->first->canWrite()?"\\W":"";
-		str += it->first->canBroadcast()?"\\B":"";
-		str += it->first->canIndicate()?"\\I":"";
-		str += it->first->canNotify()?"\\N]":"]";
+		std::string str = it->second->canRead()?"R":"";
+		str += it->second->canWrite()?"\\W":"";
+		str += it->second->canBroadcast()?"\\B":"";
+		str += it->second->canIndicate()?"\\I":"";
+		str += it->second->canNotify()?"\\N]":"]";
 		std::stringstream ss1;
-		ss1 << BLEUtils::gattCharacteristicUUIDToString(it->first->getUUID().getNative()->uuid.uuid16) << \
-				" Characteristic: " << it->first->getUUID().toString() << "[" << \
+		ss1 << BLEUtils::gattCharacteristicUUIDToString(it->second->getUUID().getNative()->uuid.uuid16) << \
+				" Characteristic: " << it->second->getUUID().toString() << "[" << \
 				str;
 
 		ch.setString("text", ss1.str());
@@ -181,10 +181,10 @@ JsonArray BLEExplorer::enumerateCharacteristics(std::map<BLERemoteCharacteristic
 		state.setBoolean("opened", true);
 		ch.setObject("state", state);
 		std::map<uint16_t, BLERemoteCharacteristic*> pChars;
-		std::map<std::string, BLERemoteDescriptor*> *desc = it->first->getDescriptors();
+		std::map<std::string, BLERemoteDescriptor*> *desc = it->second->getDescriptors();
 		ar = enumerateDescriptors(desc);
-		std::string f = it->first->readValue();
-		ESP_LOGI(LOG_TAG, "Value: %s, %d, %#4x", f.c_str(), it->first->readUInt32(), it->first->readUInt32());
+		std::string f = it->second->readValue();
+		ESP_LOGI(LOG_TAG, "Value: %s, %d, %#4x", f.c_str(), it->second->readUInt32(), it->second->readUInt32());
 		std::stringstream ss;
 		ss << "Value: " << f;
 		val.setString("text", ss.str());
