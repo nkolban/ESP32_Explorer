@@ -446,14 +446,14 @@ static void handle_REST_BLE_SERVER_START_ADV(HttpRequest* pRequest, HttpResponse
 	pResponse->sendData("start adv");
 }
 static void handle_REST_BLE_SERVER_STOP_ADV(HttpRequest* pRequest, HttpResponse* pResponse) {
-	/*JsonObject obj = JSON::createObject();
+	JsonObject obj = JSON::createObject();
 	std::map<std::string, std::string> parts = pRequest->parseForm();
 	if(atoi(pRequest->getHeader(pRequest->HTTP_HEADER_CONTENT_LENGTH).c_str())>0){
 		uint16_t service = strtoul(parts.at("handle").c_str(), NULL, 16);
 		g_pBLEExplorer->startService(service);
 	}
-*/
-	g_pBLEExplorer->stopAdvertising();
+
+	//g_pBLEExplorer->stopAdvertising();
 	pResponse->addHeader("access-control-allow-origin", "*");
 	pResponse->addHeader("Content-Type", "text/plain");
 	pResponse->sendData("stop adv");

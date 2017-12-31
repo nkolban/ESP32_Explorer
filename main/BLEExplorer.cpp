@@ -12,7 +12,7 @@
 #include "Task.h"
 #include "Memory.h"
 #include <sstream>
-
+#include "BLE2902.h"
 #include "BLEClient.h"
 static const char* LOG_TAG = "BLEExplorer";
 static bool isRunning = false;
@@ -67,9 +67,20 @@ JsonArray BLEExplorer::connect(std::string _addr){
 //	Memory::startTraceAll();
 	JsonArray arr = JSON::createArray();
 	for (auto it=pRemoteServices->begin(); it!=pRemoteServices->end(); ++it) {
-		std::map<uint16_t, BLERemoteCharacteristic*> pRemoteCharacteristics;
-		it->second->getCharacteristics(&pRemoteCharacteristics);
-		arr.addObject(enumerateCharacteristics(it->second, &pRemoteCharacteristics, _addr));
+		JsonObject obj = JSON::createObject();
+		char tmp[33];
+		itoa(it->second->getHandle(), tmp, 16);
+
+		obj.setString("id", tmp);  // todo service's handle
+		obj.setString("text", BLEUtils::gattServiceToString(it->second->getUUID().getNative()->uuid.uuid32) + " Service: " + it->second->getUUID().toString());
+		obj.setString("icon", "service");
+		JsonObject state = JSON::createObject();
+		state.setBoolean("opened", true);
+		obj.setObject("state", state);
+		obj.setString("parent", _addr);
+		std::map<std::string, BLERemoteCharacteristic*> *pChars = it->second->getCharacteristics();
+		obj.setArray("children", enumerateCharacteristics(pChars));
+		arr.addObject(obj);
 	}
 
 	pClient->disconnect();
@@ -99,7 +110,7 @@ JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){
 	arr.addObject(obj2);
 	if(device.haveManufacturerData()){
 		obj2 = JSON::createObject();
-		obj2.setString("text", "Manufacturer - " + device.getManufacturerData());
+		obj2.setString("text", "Manufacturer - " + atoi(device.getManufacturerData().c_str()));
 		arr.addObject(obj2);
 	}
 	std::stringstream ss;
@@ -111,21 +122,21 @@ JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){
 	}
 	if(device.haveRSSI()){
 		ss.str("");
-		ss << "RSSI - " <<  device.getRSSI();
+		ss << "RSSI - " <<  (int)device.getRSSI();
 		obj2 = JSON::createObject();
 		obj2.setString("text", ss.str());
 		arr.addObject(obj2);
 	}
 	if(device.haveTXPower()){
 		ss.str("");
-		ss << "TX power - " << device.getTXPower();
+		ss << "TX power - " << (int)device.getTXPower();
 		obj2 = JSON::createObject();
 		obj2.setString("text", ss.str());
 		arr.addObject(obj2);
 	}
 	if(device.haveServiceUUID()){
 		ss.str("");
-		ss << "Services - " << device.getAddress().toString();
+		ss << "Advertised services - " << device.getServiceUUID().toString();
 		obj2 = JSON::createObject();
 		obj2.setString("text", ss.str());
 		arr.addObject(obj2);
@@ -139,31 +150,67 @@ JsonObject BLEExplorer::enumerateDevices(BLEAdvertisedDevice device){
 /*
  * @brief Enumerate characteristics from given service
  */
-JsonObject BLEExplorer::enumerateCharacteristics(BLERemoteService *pService, std::map<uint16_t, BLERemoteCharacteristic*> *characteristicMap, std::string _addr){
-	JsonObject obj = JSON::createObject();
+JsonArray BLEExplorer::enumerateCharacteristics(std::map<std::string, BLERemoteCharacteristic*> *characteristicMap){
+
+	//std::map<uint16_t, BLERemoteCharacteristic*> *characteristicMap = pService;
+	//pService->getCharacteristics(characteristicMap);
 	JsonArray arr = JSON::createArray();
-	char tmp;
-	itoa(pService->getHandle(), &tmp, 16);
+	char tmp[33];
 
-	obj.setString("id", &tmp);  // todo service's handle
-	obj.setString("text", BLEUtils::gattServiceToString(pService->getUUID().getNative()->uuid.uuid32) + " Service: " + pService->getUUID().toString());
-	obj.setString("icon", "service");
-	JsonObject state = JSON::createObject();
-	state.setBoolean("opened", true);
-	obj.setObject("state", state);
-	obj.setString("parent", _addr);
-
-	for (auto it=characteristicMap->begin(); it!=characteristicMap->end(); ++it) {  // TODO add descriptors enumerator, add short uuid if characteristic !UNKNOWN
+	for (auto it=characteristicMap->begin(); it!=characteristicMap->end(); it++) {  // TODO add descriptors enumerator, add short uuid if characteristic !UNKNOWN
 		JsonObject ch = JSON::createObject();
-		itoa(it->second->getHandle(), &tmp, 16);
-		ch.setString("id", &tmp);  // characteristic's handle
-		ch.setString("text", BLEUtils::gattCharacteristicUUIDToString(it->second->getUUID().getNative()->uuid.uuid16) + " Characteristic: " + it->second->getUUID().toString());
+		JsonObject val = JSON::createObject();
+		JsonArray ar = JSON::createArray();
+		itoa(it->second->getHandle(), tmp, 16);
+		ch.setString("id", tmp);  // characteristic's handle
+
+		std::string str = it->second->canRead()?"R":"";
+		str += it->second->canWrite()?"\\W":"";
+		str += it->second->canBroadcast()?"\\B":"";
+		str += it->second->canIndicate()?"\\I":"";
+		str += it->second->canNotify()?"\\N]":"]";
+		std::stringstream ss1;
+		ss1 << BLEUtils::gattCharacteristicUUIDToString(it->second->getUUID().getNative()->uuid.uuid16) << \
+				" Characteristic: " << it->second->getUUID().toString() << "[" << \
+				str;
+
+		ch.setString("text", ss1.str());
+
 		ch.setString("icon", "characteristic");
+		JsonObject state = JSON::createObject();
+		state.setBoolean("opened", true);
+		ch.setObject("state", state);
+		std::map<uint16_t, BLERemoteCharacteristic*> pChars;
+		std::map<std::string, BLERemoteDescriptor*> *desc = it->second->getDescriptors();
+		ar = enumerateDescriptors(desc);
+		std::string f = it->second->readValue();
+		ESP_LOGI(LOG_TAG, "Value: %s, %d, %#4x", f.c_str(), it->second->readUInt32(), it->second->readUInt32());
+		std::stringstream ss;
+		ss << "Value: " << f;
+		val.setString("text", ss.str());
+		ar.addObject(val);
+		ch.setArray("children", ar);
 		arr.addObject(ch);
 	}
 
-	obj.setArray("children", arr);
-	return obj;
+	return arr;
+}
+
+JsonArray BLEExplorer::enumerateDescriptors(std::map<std::string, BLERemoteDescriptor*>* descriptors){
+	JsonArray arr = JSON::createArray();
+	for(auto it=descriptors->begin();it!=descriptors->end();it++){
+		JsonObject obj = JSON::createObject();
+		obj.setString("icon", "descriptor");
+		/*JsonObject val = JSON::createObject();
+		std::stringstream ss;
+		ss << "Value: " << it->second->readValue();
+		val.setString("text", ss.str());
+		obj.setObject("children", val);*/
+		obj.setString("text", BLEUtils::gattDescriptorUUIDToString(it->second->getUUID().getNative()->uuid.uuid16) + " Descriptor: " + it->second->getUUID().toString());
+		arr.addObject(obj);
+	}
+
+	return arr;
 }
 
 void BLEExplorer::createServer(std::string name){
@@ -185,7 +232,7 @@ JsonObject BLEExplorer::addService(BLEUUID _uuid){
 	BLEService *pservice = pServer->createService(_uuid);
 	if(pservice != nullptr){
 		mServices->setByHandle(pservice->getHandle(), pservice);
-		pservice->start();
+//		pservice->start();
 		obj.setString("icon", "service");
 		itoa(pservice->getHandle(), ptr, 16);
 		obj.setString("handle", ptr);
@@ -201,6 +248,7 @@ JsonObject BLEExplorer::addCharacteristic(BLEUUID uuid, uint16_t service){
 	ESP_LOGE(LOG_TAG, "ADD: %d", pservice->getHandle());
 	BLECharacteristic *charact = pservice->createCharacteristic(BLEUUID(uuid), {BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE});
 	charact->setValue("Private name");
+	//mCharacteristics->setByHandle(charact->getHandle(), charact);
 	JsonObject obj = JSON::createObject();
 	obj.setString("icon", "characteristic");
 	itoa(charact->getHandle(), ptr, 16);
@@ -214,13 +262,15 @@ JsonObject BLEExplorer::addCharacteristic(BLEUUID uuid, uint16_t service){
 JsonObject BLEExplorer::addDescriptor(BLEUUID uuid, uint16_t charact){
 	char ptr[33];
 	BLECharacteristic *pcharact = mCharacteristics->getByHandle(charact);
-	BLEDescriptor descr = BLEDescriptor(uuid);
-	pcharact->addDescriptor(&descr);
+	assert(charact == pcharact->getHandle());
+	BLEDescriptor *descr = new BLE2902();
+	pcharact->addDescriptor(descr);
 	JsonObject obj = JSON::createObject();
 	obj.setString("icon", "descriptor");
-	itoa(descr.getHandle(), ptr, 16);
+	itoa(descr->getHandle(), ptr, 16);
 	obj.setString("handle", ptr);
-	obj.setString("parent", pcharact->getUUID().toString());
+	itoa(pcharact->getHandle(), ptr, 16);
+	obj.setString("parent", ptr);
 	obj.setString("text", BLEUtils::gattDescriptorUUIDToString(uuid.getNative()->uuid.uuid32) + " Descriptor: " + uuid.toString());
 	return obj;
 }
