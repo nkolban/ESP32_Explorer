@@ -539,7 +539,7 @@ void ESP32_Explorer::start() {
 	  */
 	 HttpServer* pHttpServer = new HttpServer();
 	 std::regex TestPath("\\/hello.*");
-	 pHttpServer->addPathHandler("GET",    &TestPAth,      		           handleTest);
+	 pHttpServer->addPathHandler("GET",    &TestPath,      		           handleTest);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/WIFI",                  handle_REST_WiFi);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/I2S",                   handle_REST_I2S);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/GPIO",                  handle_REST_GPIO);
