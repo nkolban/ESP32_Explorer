@@ -538,8 +538,8 @@ void ESP32_Explorer::start() {
 	  * Create a WebServer and register handlers for REST requests.
 	  */
 	 HttpServer* pHttpServer = new HttpServer();
-	 pHttpServer->setRootPath("/spiflash");
-	 pHttpServer->addPathHandler("GET",    "/hello",      		           handleTest);
+	 std::regex TestPath("\\/hello.*");
+	 pHttpServer->addPathHandler("GET",    &TestPAth,      		           handleTest);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/WIFI",                  handle_REST_WiFi);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/I2S",                   handle_REST_I2S);
 	 pHttpServer->addPathHandler("GET",    "/ESP32/GPIO",                  handle_REST_GPIO);
